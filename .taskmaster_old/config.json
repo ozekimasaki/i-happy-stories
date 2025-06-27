@@ -1,9 +1,9 @@
 {
   "models": {
     "main": {
-      "provider": "google",
-      "modelId": "gemini-2.5-flash",
-      "maxTokens": 1048000,
+      "provider": "perplexity",
+      "modelId": "sonar-pro",
+      "maxTokens": 8700,
       "temperature": 0.2
     },
     "research": {

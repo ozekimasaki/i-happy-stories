@@ -2,481 +2,518 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
-        "title": "Project Initialization (Hono, Vite, CF Workers)",
-        "description": "Initialize the project using the Hono Cloudflare Workers template and integrate Vite for frontend development.",
-        "details": "Use `create-hono@latest` with the `cloudflare-workers` template. Add Vite to the project structure, configuring it to work alongside Hono for a single development command. Ensure `wrangler.toml` is set up for basic Cloudflare Workers/Pages structure.",
-        "testStrategy": "Verify project structure is created correctly. Run a development command (`wrangler dev`) to ensure both backend (Hono) and frontend (Vite) start without errors.",
+        "id": 44,
+        "title": "Project Repository Initialization",
+        "description": "Initialize the Git repository and set up the basic project directory structure as outlined in the PRD, including `functions/`, `public/`, `src/`, and root configuration files.",
+        "details": "Create a new Git repository. Set up the initial folder structure: `functions/api/`, `public/`, `src/assets/`, `src/components/`, `src/lib/`, `src/pages/`. Create placeholder files like `functions/api/[[path]].ts`, `src/main.tsx`, `index.html`, `package.json`, `vite.config.ts`, `.dev.vars`, `.env`.",
+        "testStrategy": "Verify that the project directory structure matches the PRD specification and all initial placeholder files are present.",
         "priority": "high",
         "dependencies": [],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Initialize Hono Cloudflare Workers Project",
-            "description": "Use the `create-hono` CLI tool to generate the initial project structure based on the Cloudflare Workers template.",
+            "title": "Initialize Git Repository",
+            "description": "Create a new Git repository in the project's root directory.",
             "dependencies": [],
-            "details": "Run `npm create hono@latest` or `yarn create hono@latest` or `pnpm create hono@latest`. Select the `cloudflare-workers` template when prompted. Choose a project name.",
+            "details": "Execute 'git init' in the project's root directory.",
             "status": "done",
-            "testStrategy": "Verify that a new directory with the chosen project name is created and contains basic Hono/Cloudflare Workers files like `src/index.ts` and `wrangler.toml`."
+            "testStrategy": "Verify the existence of the '.git' directory in the project root."
           },
           {
             "id": 2,
-            "title": "Configure Basic Wrangler Settings",
-            "description": "Review and configure the generated `wrangler.toml` file for basic Cloudflare Workers/Pages setup.",
+            "title": "Establish Base Project Directories",
+            "description": "Create the primary top-level directories for the project structure.",
             "dependencies": [
               1
             ],
-            "details": "Open `wrangler.toml`. Ensure `name` is set correctly. Set `main` to the entry point (likely `src/index.ts`). Set `compatibility_date` to a recent date. Consider setting `compatibility_flags` if needed. For Pages, ensure `pages_build_output_dir` is configured (though this might be adjusted later when Vite is integrated).",
+            "details": "Create the 'functions/', 'public/', and 'src/' directories directly under the project root.",
             "status": "done",
-            "testStrategy": "Ensure `wrangler.toml` exists and contains the basic required fields (`name`, `main`, `compatibility_date`). Run `npx wrangler dev` to see if the basic worker starts without errors (it should serve the default Hono app)."
+            "testStrategy": "Confirm that 'functions/', 'public/', and 'src/' directories exist at the project root."
           },
           {
             "id": 3,
-            "title": "Add Vite and Frontend Structure",
-            "description": "Install Vite and related dependencies, and create a basic directory structure for frontend assets.",
+            "title": "Define Nested Source and API Directories",
+            "description": "Create the specific subdirectories within the 'functions/' and 'src/' main directories.",
             "dependencies": [
               2
             ],
-            "details": "Navigate into the project directory. Run `npm install vite @vitejs/plugin-react --save-dev` (or equivalent for Vue, etc., or just `vite` if no framework). Create a new directory for frontend code, e.g., `src/frontend`. Inside `src/frontend`, create an `index.html` and a basic entry point file (e.g., `main.ts` or `main.jsx`).",
+            "details": "Create 'functions/api/', 'src/assets/', 'src/components/', 'src/lib/', and 'src/pages/' directories.",
             "status": "done",
-            "testStrategy": "Verify that `vite` and chosen framework plugins are added to `package.json` devDependencies. Confirm the existence of the `src/frontend` directory with `index.html` and an entry point file."
+            "testStrategy": "Verify the existence of 'functions/api/', 'src/assets/', 'src/components/', 'src/lib/', and 'src/pages/' directories."
           },
           {
             "id": 4,
-            "title": "Integrate Vite with Hono",
-            "description": "Configure Hono to serve static assets built by Vite and potentially set up a development proxy or use a plugin for seamless integration.",
+            "title": "Generate Root Configuration and Public Files",
+            "description": "Create essential configuration files and the main HTML file at the project root.",
             "dependencies": [
-              3
+              2
             ],
-            "details": "Install a Hono static middleware: `npm install @hono/vite-dev-server @hono/vite-cloudflare-pages --save-dev` (or `@hono/vite-dev-server @hono/vite-cloudflare-workers` depending on target). Configure `vite.config.ts` (or `.js`) to use the Hono plugin, pointing it to your Hono entry file (`src/index.ts`) and potentially configuring the frontend root (`src/frontend`). Modify `src/index.ts` to serve static files from the build output directory (e.g., `dist`) using `@hono/vite-cloudflare-pages` or `@hono/vite-cloudflare-workers` middleware.",
+            "details": "Create empty placeholder files: 'package.json', 'vite.config.ts', 'index.html', '.dev.vars', and '.env' in the project root.",
             "status": "done",
-            "testStrategy": "Run `npx vite build` to ensure Vite builds the frontend without errors into a `dist` directory. Modify `src/index.ts` to serve a simple static file from `dist`. Run `npx wrangler dev` and verify the static file is served correctly by the worker."
+            "testStrategy": "Check for the presence of 'package.json', 'vite.config.ts', 'index.html', '.dev.vars', and '.env' files in the project root."
           },
           {
             "id": 5,
-            "title": "Define Unified Development Script",
-            "description": "Create or modify `package.json` scripts to allow starting both the Hono worker (via Wrangler dev) and the Vite dev server (or a combined process) with a single command.",
+            "title": "Populate Core Source and API Placeholder Files",
+            "description": "Create the specified placeholder files within the 'functions/api/' and 'src/' directories.",
             "dependencies": [
-              4
+              3
             ],
-            "details": "Update the `scripts` section in `package.json`. Add a script like `dev` that uses `@hono/vite-dev-server` or a similar tool/approach that integrates Wrangler's dev server with Vite's dev server. The exact command depends on the chosen integration method (e.g., using `hono-vite-dev-server` command or configuring the Vite plugin to handle it). Ensure this script watches both backend and frontend files for changes.",
+            "details": "Create empty placeholder files: 'functions/api/[[path]].ts' and 'src/main.tsx'.",
             "status": "done",
-            "testStrategy": "Run the new unified `npm run dev` command. Verify that both the Hono worker and the Vite dev server (or the integrated process) start successfully. Access the local development URL and confirm that the frontend application loads and interacts with the Hono backend if applicable (e.g., a simple API endpoint)."
+            "testStrategy": "Confirm the existence of 'functions/api/[[path]].ts' and 'src/main.tsx' in their respective paths."
           }
         ]
       },
       {
-        "id": 2,
-        "title": "Environment Variable Management Setup",
-        "description": "Set up environment variable management using `.dev.vars` for local development and Wrangler Secrets for production API key management (Supabase, Google Gemini).",
-        "details": "Create a `.dev.vars` file in the project root for local secrets (e.g., `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GEMINI_API_KEY`). Document the process for adding secrets via `wrangler secret put <KEY_NAME>` for production deployment.",
-        "testStrategy": "Verify that environment variables can be accessed correctly within the Hono application during local development using `.dev.vars`. Confirm Wrangler Secrets can be added via the CLI.",
+        "id": 45,
+        "title": "Cloudflare Pages Project Setup",
+        "description": "Set up a new project on Cloudflare Pages, linking it to the Git repository for continuous deployment. Configure the build settings for a React SPA with Cloudflare Pages Functions.",
+        "details": "Log in to Cloudflare, navigate to Pages, and create a new project. Connect it to the Git repository initialized in Task 44. Configure the build command (e.g., `npm run build`) and output directory (e.g., `dist`). Ensure Cloudflare Pages Functions are enabled and configured to look for functions in the `functions` directory.",
+        "testStrategy": "Successfully deploy an empty project to Cloudflare Pages. Verify that the build process completes without errors and a basic 'Hello World' page (if added) is accessible.",
+        "priority": "high",
+        "dependencies": [
+          44
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 46,
+        "title": "Vite React Frontend Base Setup",
+        "description": "Set up the frontend development environment using Vite and React with TypeScript. This includes configuring `vite.config.ts`, `package.json` dependencies, and the main React entry point.",
+        "details": "In `package.json`, add `react`, `react-dom`, `typescript`, `@types/react`, `@types/react-dom`, `vite`, `@vitejs/plugin-react` as dependencies. Configure `vite.config.ts` to use the React plugin. Create `src/main.tsx` to render a basic React App component into `index.html`.",
+        "testStrategy": "Run `npm install` and `npm run dev` (or equivalent Vite command). Verify that the React development server starts successfully and displays a basic React app in the browser.",
+        "priority": "high",
+        "dependencies": [
+          44
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 47,
+        "title": "Hono Backend Base Setup",
+        "description": "Set up the backend API using Hono within Cloudflare Pages Functions. This involves configuring the `functions/api/[[path]].ts` entry point and adding Hono dependencies.",
+        "details": "In `package.json`, add `hono` as a dependency. Create `functions/api/[[path]].ts` and initialize a basic Hono app: `import { Hono } from 'hono'; const app = new Hono(); app.get('/api/hello', (c) => c.text('Hello Hono!')); export const onRequest = app.fetch;`. This file will serve as the catch-all for `/api/*` requests.",
+        "testStrategy": "Verify that the Hono app compiles without errors. After setting up `wrangler` (Task 48), confirm that the `/api/hello` endpoint is accessible locally.",
+        "priority": "high",
+        "dependencies": [
+          44
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 48,
+        "title": "Concurrently Local Dev Setup",
+        "description": "Configure `concurrently` or a similar tool to run the Vite development server and the Cloudflare Wrangler local development server simultaneously for a seamless local development experience.",
+        "details": "Install `concurrently` as a dev dependency. Add a script to `package.json` like `\"dev\": \"concurrently \\\"npm run dev:frontend\\\" \\\"npm run dev:backend\\\"\"`, where `dev:frontend` runs `vite` and `dev:backend` runs `wrangler pages dev public --compatibility-date=2023-10-26 --local-protocol=http --port 8787` (adjust port as needed). Ensure `wrangler` is installed globally or locally.",
+        "testStrategy": "Run `npm run dev`. Verify that both the Vite frontend and Wrangler backend servers start up concurrently and are accessible on their respective ports.",
+        "priority": "high",
+        "dependencies": [
+          46,
+          47
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 49,
+        "title": "Supabase Project & DB Setup",
+        "description": "Set up a new Supabase project, including database creation and initial configuration for authentication services. Obtain necessary API keys and project URLs.",
+        "details": "Go to Supabase.com, create a new project. Note down the Project URL and `anon` (public) key from the Project Settings -> API section. Familiarize with the SQL Editor for future schema creation.",
+        "testStrategy": "Successfully create a Supabase project and confirm access to its dashboard, API keys, and SQL editor.",
         "priority": "high",
         "dependencies": [],
         "status": "done",
         "subtasks": []
       },
       {
-        "id": 3,
-        "title": "Backend Base Routing and SPA Serving",
-        "description": "Configure Hono to handle API routes under `/api/*` and serve the static React SPA build for all other routes.",
-        "details": "Implement Hono routing to match `/api/*` paths for backend logic. For any other incoming request path, configure Hono to serve the `index.html` file from the built React application directory (e.g., `dist`).",
-        "testStrategy": "Test by accessing `/api/some-path` (should return 404 or a placeholder) and `/` or `/some-page` (should serve the index.html of the frontend). Ensure static assets (JS, CSS) are served correctly from the build directory.",
+        "id": 50,
+        "title": "Google Gemini API Key Acquisition",
+        "description": "Obtain and configure access to the Google Gemini API for AI-powered story and illustration generation.",
+        "details": "Access the Google Cloud Console or AI Studio. Enable the Gemini API. Create an API key for server-side use. Ensure billing is enabled if required.",
+        "testStrategy": "Successfully generate a Google Gemini API key and confirm its validity (e.g., by making a test call with a tool like Postman or curl).",
         "priority": "high",
-        "dependencies": [
-          1
-        ],
+        "dependencies": [],
         "status": "done",
         "subtasks": []
       },
       {
-        "id": 4,
-        "title": "Supabase Schema Definition and Backend Client Setup",
-        "description": "Define the necessary database schema in Supabase (users, stories, illustrations) and set up the Supabase client in the backend.",
-        "details": "Create tables: `users` (Supabase Auth handles this), `stories` (`id`, `user_id` FK to users, `input_event`, `story_text`, `created_at`), `illustrations` (`id`, `story_id` FK to stories, `image_url`, `prompt_used`, `created_at`). Configure Row Level Security (RLS) policies. Initialize the Supabase client in the Hono application using environment variables.",
-        "testStrategy": "Verify tables and RLS policies are correctly applied in the Supabase dashboard. Write a simple test function in the backend to connect to Supabase and perform a basic query (e.g., select from a public table or attempt to insert with RLS enabled).",
+        "id": 51,
+        "title": "Environment Variable Management Strategy",
+        "description": "Establish a robust environment variable management strategy for both local development (`.env`, `.dev.vars`) and production (Cloudflare Pages console).",
+        "details": "For frontend, define `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` in `.env`. For backend, define `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_ANON_KEY` if service role not needed yet), `GEMINI_API_KEY` in `.dev.vars`. Document the process for setting these variables in the Cloudflare Pages console for production.",
+        "testStrategy": "Verify that environment variables are correctly loaded and accessible in both frontend (via `import.meta.env`) and backend (via `c.env` in Hono) during local development. Confirm the process for setting them in Cloudflare Pages.",
         "priority": "high",
         "dependencies": [
-          2
-        ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Define 'stories' table schema in Supabase",
-            "description": "Create the 'stories' table in the Supabase database with the specified columns and establish the foreign key relationship to the 'auth.users' table.",
-            "dependencies": [],
-            "details": "Use the Supabase SQL Editor or the Table Editor UI to create the `stories` table. Columns: `id` (UUID, Primary Key, default gen_random_uuid()), `user_id` (UUID, Foreign Key referencing `auth.users.id`, NOT NULL), `input_event` (JSONB, stores the input event data), `story_text` (TEXT, stores the generated story text), `created_at` (TIMESTAMP WITH TIME ZONE, default now()). Ensure the foreign key constraint is correctly set up.",
-            "status": "done",
-            "testStrategy": "Verify the table exists in the Supabase UI and check the column definitions and foreign key constraint."
-          },
-          {
-            "id": 2,
-            "title": "Define 'illustrations' table schema in Supabase",
-            "description": "Create the 'illustrations' table in the Supabase database and establish the foreign key relationship to the newly created 'stories' table.",
-            "dependencies": [
-              1
-            ],
-            "details": "Use the Supabase SQL Editor or the Table Editor UI to create the `illustrations` table. Columns: `id` (UUID, Primary Key, default gen_random_uuid()), `story_id` (UUID, Foreign Key referencing `stories.id`, NOT NULL), `image_url` (TEXT, stores the URL of the generated image), `prompt_used` (TEXT, stores the prompt used for image generation), `created_at` (TIMESTAMP WITH TIME ZONE, default now()). Ensure the foreign key constraint referencing `stories` is correctly set up.",
-            "status": "done",
-            "testStrategy": "Verify the table exists in the Supabase UI and check the column definitions and foreign key constraint referencing `stories`."
-          },
-          {
-            "id": 3,
-            "title": "Configure Row Level Security (RLS) for 'stories' table",
-            "description": "Enable RLS for the 'stories' table and create policies that allow authenticated users to only access (read, write, update, delete) their own stories.",
-            "dependencies": [
-              1
-            ],
-            "details": "In the Supabase UI, navigate to the 'Authentication' -> 'Policies' section. Select the `stories` table. Enable RLS. Create policies: \n- `Enable read access for users based on user_id`: `SELECT` policy, `USING (auth.uid() = user_id)`\n- `Enable insert for users based on user_id`: `INSERT` policy, `WITH CHECK (auth.uid() = user_id)`\n- `Enable update for users based on user_id`: `UPDATE` policy, `USING (auth.uid() = user_id)`\n- `Enable delete for users based on user_id`: `DELETE` policy, `USING (auth.uid() = user_id)`",
-            "status": "done",
-            "testStrategy": "Use the Supabase SQL Editor to test policies: try selecting/inserting/updating/deleting data as an authenticated user (using `set role authenticated; set jwt.claims.sub = 'user-uuid';`) and verify only rows matching the user_id are affected. Test as an anonymous user (`set role anonymous;`) and verify no access."
-          },
-          {
-            "id": 4,
-            "title": "Configure Row Level Security (RLS) for 'illustrations' table",
-            "description": "Enable RLS for the 'illustrations' table and create policies that allow authenticated users to access illustrations linked to stories they own.",
-            "dependencies": [
-              2,
-              3
-            ],
-            "details": "In the Supabase UI, navigate to the 'Authentication' -> 'Policies' section. Select the `illustrations` table. Enable RLS. Create policies:\n- `Enable read access for users based on story owner`: `SELECT` policy, `USING ((SELECT user_id FROM stories WHERE id = story_id) = auth.uid())`\n- `Enable insert for users based on story owner`: `INSERT` policy, `WITH CHECK ((SELECT user_id FROM stories WHERE id = story_id) = auth.uid())`\n- `Enable delete for users based on story owner`: `DELETE` policy, `USING ((SELECT user_id FROM stories WHERE id = story_id) = auth.uid())`\n(Update policy might not be strictly necessary for illustrations, but can be added if needed following the same pattern).",
-            "status": "done",
-            "testStrategy": "Use the Supabase SQL Editor to test policies: try selecting/inserting/deleting illustrations as an authenticated user. Verify access is granted only for illustrations linked to stories owned by that user. Test access to illustrations linked to stories owned by *other* users and verify denial. Test as an anonymous user and verify no access."
-          },
-          {
-            "id": 5,
-            "title": "Initialize Supabase client in backend application",
-            "description": "Set up the Supabase client instance within the Hono backend application using environment variables for the Supabase URL and anonymous key.",
-            "dependencies": [
-              3,
-              4
-            ],
-            "details": "Identify the appropriate place in the Hono application's initialization code (e.g., an entry point file or a dedicated config/client module) to create the Supabase client. Use `createClient` from the Supabase client library. Retrieve `SUPABASE_URL` and `SUPABASE_ANON_KEY` from environment variables. Ensure these environment variables are configured in the deployment environment (e.g., `.env` file for local development, platform settings for deployment). Export the initialized client instance so it can be used in API routes.",
-            "status": "done",
-            "testStrategy": "Add a simple test endpoint that uses the initialized Supabase client to perform a basic query (e.g., `client.from('stories').select('*').limit(1)`). Call this endpoint and verify that it executes without errors, indicating the client is correctly initialized and can connect to Supabase."
-          }
-        ]
-      },
-      {
-        "id": 5,
-        "title": "Backend User Authentication Endpoints (Supabase Auth)",
-        "description": "Implement backend API endpoints for user authentication (Sign up and Login) using Supabase Auth.",
-        "details": "Create Hono routes like `POST /api/auth/signup` and `POST /api/auth/login`. Use the Supabase client's `auth.signUp` and `auth.signInWithPassword` methods. Handle request body validation and return appropriate responses (e.g., JWT token or error).",
-        "testStrategy": "Use a tool like Postman or `curl` to send requests to the signup and login endpoints. Verify that new users are created in Supabase Auth and that login returns a valid session/token for existing users. Test edge cases like invalid credentials or duplicate signups.",
-        "priority": "high",
-        "dependencies": [
-          4
-        ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Initialize Supabase Client in Backend",
-            "description": "Set up and initialize the Supabase client instance within the backend application (Hono context) so it can be accessed by authentication routes.",
-            "dependencies": [],
-            "details": "Create a utility function or middleware to initialize the Supabase client using environment variables for the Supabase URL and Anon Key. Make the client instance available in the Hono context (`c.env` or similar) for subsequent route handlers.",
-            "status": "done",
-            "testStrategy": "Verify that the Supabase client is successfully initialized and accessible in a simple test route (e.g., a health check endpoint that confirms client presence)."
-          },
-          {
-            "id": 2,
-            "title": "Implement POST /api/auth/signup Endpoint",
-            "description": "Create the Hono route for user signup. It should accept email and password, call `supabase.auth.signUp`, and return the result.",
-            "dependencies": [
-              1
-            ],
-            "details": "Define a `POST` route at `/api/auth/signup`. Extract `email` and `password` from the request body. Use the initialized Supabase client (`c.env.supabase`) to call `auth.signUp({ email, password })`. Handle the response from Supabase, returning a success status (e.g., 200 or 201) or an initial error status.",
-            "status": "done",
-            "testStrategy": "Manually test the endpoint with valid email/password pairs. Check the Supabase Auth dashboard to confirm user creation. Test with invalid data (e.g., missing fields) to see initial error handling."
-          },
-          {
-            "id": 3,
-            "title": "Implement POST /api/auth/login Endpoint",
-            "description": "Create the Hono route for user login. It should accept email and password, call `supabase.auth.signInWithPassword`, and return the result.",
-            "dependencies": [
-              1
-            ],
-            "details": "Define a `POST` route at `/api/auth/login`. Extract `email` and `password` from the request body. Use the initialized Supabase client (`c.env.supabase`) to call `auth.signInWithPassword({ email, password })`. Handle the response from Supabase, returning a success status (e.g., 200) or an initial error status.",
-            "status": "done",
-            "testStrategy": "Manually test the endpoint with a user created via the signup endpoint. Verify a successful response containing tokens. Test with incorrect credentials (email/password) to see initial error handling."
-          },
-          {
-            "id": 4,
-            "title": "Add Request Body Validation",
-            "description": "Implement validation for the request bodies of both signup and login endpoints to ensure required fields (email, password) are present and correctly formatted.",
-            "dependencies": [
-              2,
-              3
-            ],
-            "details": "Use a validation library (e.g., Zod) or manual checks to validate the `email` and `password` fields in the request body for both `/api/auth/signup` and `/api/auth/login`. Ensure email format is valid and password is not empty. Return a 400 Bad Request status with specific error messages if validation fails *before* calling Supabase.",
-            "status": "done",
-            "testStrategy": "Test both endpoints with missing email, missing password, invalid email format, and empty strings for fields. Verify that a 400 status code and appropriate error message are returned without attempting to call Supabase."
-          },
-          {
-            "id": 5,
-            "title": "Refine Responses and Error Handling",
-            "description": "Standardize success responses (e.g., returning tokens/user info) and enhance error handling for both signup and login endpoints based on Supabase responses and validation results.",
-            "dependencies": [
-              4
-            ],
-            "details": "For successful signup/login, structure the response body to include relevant data from the Supabase response (e.g., `session`, `user`). For errors (both validation and Supabase errors), return appropriate HTTP status codes (e.g., 400, 401, 500) and clear, consistent error messages in the response body. Map common Supabase error codes/messages to user-friendly backend responses.",
-            "status": "done",
-            "testStrategy": "Test various success and failure scenarios (valid signup, existing user signup, valid login, invalid login credentials, validation errors). Verify that the HTTP status code and response body structure are correct and consistent for each case."
-          }
-        ]
-      },
-      {
-        "id": 6,
-        "title": "Backend Authentication Middleware",
-        "description": "Implement a Hono middleware to protect API routes, ensuring only authenticated users can access them.",
-        "details": "Create a Hono middleware function that checks for a valid authentication token (e.g., JWT in the `Authorization` header). Use the Supabase client's `auth.getUser` method to validate the token. If valid, attach the user information to the context; otherwise, return a 401 Unauthorized response. Apply this middleware to protected routes.",
-        "testStrategy": "Apply the middleware to a test route. Verify that accessing the route without a token or with an invalid token results in a 401 response. Verify that accessing the route with a valid token from a logged-in user is successful.",
-        "priority": "high",
-        "dependencies": [
-          5
-        ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Setup Hono Middleware Function Structure",
-            "description": "Create the basic asynchronous Hono middleware function signature and integrate it into a simple test route to ensure it can be applied.",
-            "dependencies": [],
-            "details": "Create a new file (e.g., `src/middleware/auth.ts`). Define an `async function authMiddleware(c, next)`. Initially, just log a message and call `await next()`. Apply this middleware to a dummy route in your Hono app to verify the structure is correct and it executes.",
-            "status": "done",
-            "testStrategy": "Create a simple Hono route, apply the middleware, and make a request. Verify the log message appears in the console."
-          },
-          {
-            "id": 2,
-            "title": "Extract and Parse Authorization Header",
-            "description": "Implement logic within the middleware to read the `Authorization` header from the incoming request, check for the 'Bearer ' prefix, and extract the JWT token string. Handle cases where the header is missing or not in the expected format.",
-            "dependencies": [
-              1
-            ],
-            "details": "Inside `authMiddleware`, use `c.req.header('Authorization')` to get the header value. Check if it exists and starts with 'Bearer '. If not, immediately return a 401 Unauthorized response using `c.json({ error: 'Unauthorized' }, 401)`. If it exists and is correctly formatted, extract the token string by removing 'Bearer '.",
-            "status": "done",
-            "testStrategy": "Modify the test route from Subtask 1. Make requests with no Authorization header, a malformed header, and a correctly formatted 'Bearer token' header. Verify that 401 is returned for the first two cases and that the middleware proceeds (or logs the extracted token) for the third."
-          },
-          {
-            "id": 3,
-            "title": "Integrate Supabase Client and Call `auth.getUser`",
-            "description": "Ensure the Supabase client is accessible within the middleware and call `supabase.auth.getUser(token)` using the extracted token from the previous step.",
-            "dependencies": [
-              2
-            ],
-            "details": "Pass the Supabase client instance to the middleware or initialize it if appropriate for your architecture (ensure it's efficient, e.g., singleton). Call `const { data, error } = await supabase.auth.getUser(token);`. Log the `data` and `error` objects for debugging purposes at this stage.",
-            "status": "done",
-            "testStrategy": "Use a known valid token (e.g., from a manual Supabase login) and an invalid token. Make requests with these tokens. Verify that the logs show user data for the valid token and an error/null data for the invalid token."
-          },
-          {
-            "id": 4,
-            "title": "Process `auth.getUser` Result",
-            "description": "Evaluate the result returned by `supabase.auth.getUser`. Determine if a valid user object was returned or if there was an error indicating an invalid or expired token.",
-            "dependencies": [
-              3
-            ],
-            "details": "Check the `data` and `error` objects returned by `supabase.auth.getUser`. The token is considered valid if `error` is null and `data.user` is a non-null object. If `error` is present or `data.user` is null, the token is invalid.",
-            "status": "done",
-            "testStrategy": "Based on the logs from Subtask 3, ensure your conditional logic correctly identifies valid vs. invalid token scenarios based on the `data` and `error` structure from `supabase.auth.getUser`."
-          },
-          {
-            "id": 5,
-            "title": "Attach User to Context or Return 401",
-            "description": "Based on the validation result from Subtask 4, either attach the authenticated user object to the Hono context for downstream handlers or return a 401 Unauthorized response.",
-            "dependencies": [
-              4
-            ],
-            "details": "If the token is valid (as determined in Subtask 4), use `c.set('user', data.user)` to make the user object available to subsequent route handlers, then call `await next()`. If the token is invalid, return `c.json({ error: 'Unauthorized' }, 401)`.",
-            "status": "done",
-            "testStrategy": "Create a protected route that applies the middleware. Make requests with a valid token and an invalid token. Verify that the valid token request proceeds to the handler (e.g., returns a success message) and the invalid token request receives a 401 response. In the handler for the valid token, verify that `c.get('user')` contains the expected user object."
-          }
-        ]
-      },
-      {
-        "id": 7,
-        "title": "Frontend Project Setup and Routing (React, Vite)",
-        "description": "Initialize the React frontend project, integrate it with Vite, and set up basic client-side routing.",
-        "details": "Use `create-react-app` or Vite's React template within the project structure. Configure Vite to build the React app into a directory accessible by Hono (e.g., `dist`). Set up `react-router-dom` for client-side navigation, defining routes for the input form, display screen, login, and signup pages.",
-        "testStrategy": "Verify that the React app builds successfully using Vite. Run the combined dev command (`wrangler dev`) and navigate between the defined routes in the browser to ensure client-side routing works.",
-        "priority": "high",
-        "dependencies": [
-          1
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Initialize React Project with Vite",
-            "description": "Create the basic React project structure using Vite's React template within the main project directory.",
-            "dependencies": [],
-            "details": "Navigate to the project root directory in your terminal. Run `npm create vite@latest frontend --template react` (or use yarn/pnpm). This will create a `frontend` subdirectory with the initial React/Vite setup. Follow the prompts to install dependencies (`cd frontend && npm install`).",
-            "status": "pending",
-            "testStrategy": "Verify that the `frontend` directory is created and contains standard React/Vite files (`package.json`, `vite.config.js`, `src`, etc.). Run `npm run dev` inside `frontend` to ensure the default app starts without errors."
-          },
-          {
-            "id": 2,
-            "title": "Configure Vite Build Output",
-            "description": "Modify the Vite configuration to ensure the production build outputs files to a directory accessible by the backend (e.g., `../dist` relative to the frontend directory).",
-            "dependencies": [
-              1
-            ],
-            "details": "Edit the `frontend/vite.config.js` file. Add or modify the `build` option to set `outDir`. A common pattern is to build into a `dist` directory at the project root level, so set `build.outDir` to `../dist`. Ensure `emptyOutDir` is set to `true` to clean the output directory on each build.",
-            "status": "pending",
-            "testStrategy": "Run `npm run build` inside the `frontend` directory. Verify that a `dist` directory is created at the project root level (one level up from `frontend`) and contains the built static files (HTML, JS, CSS)."
-          },
-          {
-            "id": 3,
-            "title": "Install and Configure React Router",
-            "description": "Add the `react-router-dom` library to the frontend project and set up the basic router structure.",
-            "dependencies": [
-              2
-            ],
-            "details": "Inside the `frontend` directory, run `npm install react-router-dom`. In `frontend/src/main.jsx` (or `src/index.js`), import `BrowserRouter` from `react-router-dom` and wrap the main `<App />` component with `<BrowserRouter>`. Ensure necessary imports are added.",
-            "status": "pending",
-            "testStrategy": "Check `package.json` to confirm `react-router-dom` is listed as a dependency. Verify that `src/main.jsx` (or equivalent) correctly uses `<BrowserRouter>` without syntax errors."
-          },
-          {
-            "id": 4,
-            "title": "Define Basic Application Routes",
-            "description": "Create placeholder components for the required pages (Input, Display, Login, Signup) and define the routes using `react-router-dom`.",
-            "dependencies": [
-              3
-            ],
-            "details": "Create simple functional components (e.g., `InputPage.jsx`, `DisplayPage.jsx`, `LoginPage.jsx`, `SignupPage.jsx`) in a `src/pages` directory. Each component can simply render a heading indicating the page name. In `frontend/src/App.jsx`, import `Routes` and `Route` from `react-router-dom` and the placeholder page components. Define `<Routes>` within `<App>` and add `<Route>` elements for paths `/` (Input), `/display`, `/login`, and `/signup`, mapping them to their respective components.",
-            "status": "pending",
-            "testStrategy": "Run `npm run dev` inside `frontend`. Manually navigate to `/`, `/display`, `/login`, and `/signup` in the browser (e.g., `http://localhost:5173/`, `http://localhost:5173/display`). Verify that the correct placeholder text for each page is displayed."
-          },
-          {
-            "id": 5,
-            "title": "Verify Routing and Build Output",
-            "description": "Perform a final check to ensure client-side routing works correctly in development and that the Vite build process successfully outputs the application to the configured directory.",
-            "dependencies": [
-              4
-            ],
-            "details": "Run `npm run dev` and test navigation between the defined routes using browser address bar changes. Then, run `npm run build`. Confirm that the `../dist` directory (relative to `frontend`) is created/updated and contains the static assets for the built application, including the `index.html` file that serves as the entry point for client-side routing.",
-            "status": "pending",
-            "testStrategy": "Confirm successful navigation between all defined routes in development mode. Verify the existence and content of the `../dist` directory after running `npm run build`, ensuring `index.html` and bundled JS/CSS files are present."
-          }
-        ]
-      },
-      {
-        "id": 8,
-        "title": "Frontend Authentication Pages and State Management",
-        "description": "Implement the Login and Sign up UI pages and manage client-side authentication state.",
-        "details": "Create React components for `/login` and `/signup` routes. Implement forms that capture user input (email, password). Use the Supabase client (initialized on the frontend) to call the backend authentication endpoints or interact directly with Supabase Auth client-side methods. Manage the user's authentication state (e.g., using React Context or a state management library) and redirect users based on their login status.",
-        "testStrategy": "Test user signup and login flows in the browser. Verify that successful authentication updates the client-side state and redirects the user. Test invalid input and error handling. Verify that the UI reflects the user's logged-in status.",
-        "priority": "high",
-        "dependencies": [
-          5,
-          7
+          45,
+          49,
+          50
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 9,
-        "title": "Frontend Input Form for '出来事'",
-        "description": "Implement the frontend UI page where users can input the '出来事' (event) for story generation.",
-        "details": "Create a React component for the input form page. Include a text area or input field for the user's '出来事'. Add a submit button. Ensure the page is protected and only accessible to logged-in users (using the client-side auth state).",
-        "testStrategy": "Verify the page is only accessible when logged in. Test input field functionality. Ensure the submit button is present and interactive (though the submission logic will be added later).",
+        "id": 52,
+        "title": "Vite Proxy Configuration for API",
+        "description": "Configure Vite's development server to proxy API requests from the frontend to the locally running Hono backend, ensuring seamless communication during development.",
+        "details": "In `vite.config.ts`, add a `server.proxy` configuration: `server: { proxy: { '/api': { target: 'http://localhost:8787', changeOrigin: true, rewrite: (path) => path.replace(/^\\/api/, '/api') } } }`. Ensure the target port matches the Wrangler dev server port.",
+        "testStrategy": "Start both frontend and backend servers using `npm run dev`. Make a fetch request from the frontend to `/api/hello`. Verify that the request is successfully proxied to the backend and the 'Hello Hono!' response is received.",
+        "priority": "high",
+        "dependencies": [
+          46,
+          47,
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 53,
+        "title": "React Router Implementation",
+        "description": "Implement React Router for client-side routing, defining basic routes for authentication (login, signup) and content display (stories).",
+        "details": "Install `react-router-dom`. In `src/main.tsx` or a dedicated `App.tsx`, set up `BrowserRouter`. Define routes for `/login`, `/signup`, and `/stories` using `Routes` and `Route` components. Create placeholder components for each route.",
+        "testStrategy": "Navigate to `/login`, `/signup`, and `/stories` in the browser. Verify that the correct placeholder components are rendered for each route without full page reloads.",
         "priority": "medium",
         "dependencies": [
-          7,
-          8
+          46
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 10,
-        "title": "Backend Story Generation API Endpoint (/api/stories)",
-        "description": "Create the backend API endpoint `POST /api/stories` to handle requests for story and illustration generation.",
-        "details": "Define a Hono route `POST /api/stories`. Apply the authentication middleware (Task 6) to this route. The endpoint should accept the user's '出来事' in the request body. Initially, it can return a placeholder response.",
-        "testStrategy": "Test the endpoint using an authenticated request (e.g., with a valid JWT). Verify that it returns a successful response (even if placeholder) when authenticated and a 401 Unauthorized response when not authenticated.",
-        "priority": "high",
-        "dependencies": [
-          6
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 11,
-        "title": "Integrate Google Gemini for Text and Initial Illustration Generation",
-        "description": "Integrate Google Gemini API into the `/api/stories` endpoint for generating story text and initial illustrations.",
-        "details": "Use the `@google/generative-ai` library. Load the Gemini API key from environment variables. Read the content of `ai_prompt_instruction.md` to use as part of the text generation prompt. Construct the text generation prompt using the instruction and user input. Call Gemini's text generation model. Construct an illustration prompt based on the generated story text. Call Gemini's multimodal model or image generation model for an initial illustration.",
-        "testStrategy": "Mock the Gemini API calls to ensure the integration logic is correct. Once mocked tests pass, use a real API key to make actual calls. Verify that the endpoint receives the user input, constructs prompts correctly, calls the Gemini API, and receives responses for both text and image generation.",
-        "priority": "high",
-        "dependencies": [
-          10
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 12,
-        "title": "Save Generated Story and Illustration to Supabase",
-        "description": "Implement logic in the `/api/stories` endpoint to save the generated story text and illustration data to the Supabase database.",
-        "details": "After successfully generating story text and illustration data (e.g., image URL or reference) from Gemini, use the Supabase client to insert records into the `stories` and `illustrations` tables. Ensure the records are linked via `user_id` and `story_id`. Handle potential database errors.",
-        "testStrategy": "Trigger the `/api/stories` endpoint. Verify that new rows are created in the `stories` and `illustrations` tables in Supabase with the correct data and relationships. Check RLS policies prevent unauthorized writes.",
-        "priority": "high",
-        "dependencies": [
-          4,
-          11
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 13,
-        "title": "Frontend Display Screen for Story and Illustration",
-        "description": "Implement the frontend UI page to display the generated story text and illustration.",
-        "details": "Create a React component for the display page. This page should fetch the generated story and illustration data for the current user (or a specific story ID) from the backend API or Supabase directly (if RLS allows). Render the story text and display the illustration image.",
-        "testStrategy": "After generating a story, navigate to the display page. Verify that the correct story text and illustration are fetched and displayed. Test responsiveness and layout.",
+        "id": 54,
+        "title": "shadcn/ui Integration",
+        "description": "Integrate `shadcn/ui` into the React frontend project, following its setup instructions to enable easy component generation and styling.",
+        "details": "Follow the `shadcn/ui` installation guide, which typically involves running `npx shadcn-ui@latest init` and configuring `tailwind.config.js`, `components.json`, and `globals.css`. Add a simple `Button` component to verify the setup.",
+        "testStrategy": "Successfully install `shadcn/ui`. Add a `shadcn/ui` component (e.g., Button) to a React page and verify it renders correctly with the applied styles.",
         "priority": "medium",
         "dependencies": [
-          7,
-          12
+          46
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 14,
-        "title": "Character Consistency in Illustrations (R&D and Implementation)",
-        "description": "Research and implement techniques to maintain character design consistency across multiple illustrations generated for the same story or user.",
-        "details": "Investigate Gemini API features or external techniques for consistent image generation (e.g., using seed values, providing initial character images as input, refining prompts). Implement the chosen technique within the illustration generation logic (Task 11) or as a post-processing step.",
-        "testStrategy": "Generate multiple illustrations for the same story or character using the implemented technique. Manually review the generated images to assess the level of character consistency achieved. Compare results with and without the technique.",
+        "id": 55,
+        "title": "Global State Management Setup (Zustand)",
+        "description": "Set up global state management using Zustand (or React Context) to manage application-wide states, particularly user authentication status and tokens.",
+        "details": "Install `zustand`. Create a store (e.g., `src/lib/stores/authStore.ts`) to hold `user` object, `token`, and actions like `login`, `logout`, `setToken`. Initialize the store with default values. Consider using `localStorage` for token persistence.",
+        "testStrategy": "Create a simple component that uses the Zustand store to display a dummy user status. Verify that the state can be updated and read from different components.",
         "priority": "medium",
         "dependencies": [
-          11
+          46
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 15,
-        "title": "Cloudflare Deployment and CI/CD Pipeline Setup",
-        "description": "Configure `wrangler.toml` for deployment to Cloudflare Pages/Workers and set up a GitHub Actions CI/CD pipeline.",
-        "details": "Update `wrangler.toml` to correctly build and deploy the Hono backend as a Worker and the React frontend as Pages assets. Configure a GitHub Actions workflow (`.github/workflows/deploy.yml`) that triggers on push to the `main` branch, builds the project, and deploys to Cloudflare using the Wrangler GitHub Action.",
-        "testStrategy": "Run `wrangler deploy` locally to test the deployment configuration. Push changes to the `main` branch of the GitHub repository and verify that the GitHub Actions workflow runs successfully and deploys the application to Cloudflare Pages/Workers. Test the deployed application in a live environment.",
+        "id": 56,
+        "title": "Basic Layout Components",
+        "description": "Develop basic layout components such as a header, footer, and a main content wrapper to provide a consistent UI structure across the application.",
+        "details": "Create `src/components/layout/Header.tsx`, `src/components/layout/Footer.tsx`, and `src/components/layout/MainLayout.tsx`. Use `shadcn/ui` components where appropriate (e.g., `Button` for navigation, `Card` for sections). Integrate these into the main `App.tsx` or `Root` component.",
+        "testStrategy": "Render the layout components on a test page. Verify that they appear correctly and provide a basic visual structure. Ensure navigation links (if added) work with React Router.",
+        "priority": "medium",
+        "dependencies": [
+          53,
+          54
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 57,
+        "title": "Hono API Route Structure (`/api/*`)",
+        "description": "Define the base routing structure for the Hono API, ensuring that all API endpoints are prefixed with `/api/*` as per the PRD.",
+        "details": "In `functions/api/[[path]].ts`, ensure the Hono app is configured to handle routes under `/api/`. For example, `app.route('/api/auth', authRoutes); app.route('/api/stories', storyRoutes);`. Create separate Hono instances for different logical groups of API endpoints (e.g., `authRoutes`, `storyRoutes`).",
+        "testStrategy": "Create a dummy route like `/api/test` and verify that it can be accessed successfully through the Cloudflare Pages Functions setup (locally via Wrangler and after deployment).",
         "priority": "high",
         "dependencies": [
-          3,
-          7,
-          10,
-          11,
-          12
+          47
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 58,
+        "title": "Supabase Client Integration (Backend)",
+        "description": "Integrate the Supabase client library into the Hono backend to enable database interactions and authentication services.",
+        "details": "Install `@supabase/supabase-js`. In the Hono app, create a Supabase client instance using environment variables (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_ANON_KEY`). Make sure to pass the client instance to route handlers or use it directly within them. Example: `import { createClient } from '@supabase/supabase-js'; const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY);`.",
+        "testStrategy": "Write a simple Hono endpoint (e.g., `/api/test-db`) that attempts to fetch data from a non-existent or dummy Supabase table. Verify that the Supabase client initializes without errors and can attempt database operations.",
+        "priority": "high",
+        "dependencies": [
+          49,
+          51,
+          57
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 59,
+        "title": "Google Gemini Client Integration (Backend)",
+        "description": "Integrate the Google Gemini API client library into the Hono backend to facilitate AI-powered content generation.",
+        "details": "Install the appropriate Google Gemini client library (e.g., `@google/generative-ai`). Initialize the client with the `GEMINI_API_KEY` from environment variables. Create a helper function or service to encapsulate Gemini API calls.",
+        "testStrategy": "Create a simple Hono endpoint (e.g., `/api/test-gemini`) that makes a basic text generation request to the Gemini API. Verify that the API call is successful and returns a response.",
+        "priority": "high",
+        "dependencies": [
+          50,
+          51,
+          57
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 60,
+        "title": "Backend Auth Endpoints",
+        "description": "Implement backend API endpoints for user signup (`/api/auth/signup`) and login (`/api/auth/login`) using Hono.",
+        "details": "Create `functions/api/auth.ts` to define Hono routes for `/signup` and `/login`. These routes will receive user credentials (email, password) from the frontend. Use `c.req.json()` to parse the request body.",
+        "testStrategy": "Use a tool like Postman or `curl` to send POST requests to `/api/auth/signup` and `/api/auth/login` with dummy data. Verify that the endpoints receive the data correctly and return a placeholder success/error response.",
+        "priority": "high",
+        "dependencies": [
+          57,
+          58
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 61,
+        "title": "Supabase User Authentication Logic (Backend)",
+        "description": "Implement the logic within the backend authentication endpoints to interact with Supabase for user registration and login.",
+        "details": "For signup, use `supabase.auth.signUp({ email, password })`. For login, use `supabase.auth.signInWithPassword({ email, password })`. Handle success and error responses from Supabase, returning appropriate HTTP status codes and messages.",
+        "testStrategy": "Attempt to sign up a new user and log in an existing user via the API endpoints. Verify that users are created/authenticated in the Supabase dashboard and the API returns success or specific error messages (e.g., 'User already exists', 'Invalid credentials').",
+        "priority": "high",
+        "dependencies": [
+          60
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 62,
+        "title": "JWT Generation & Response (Backend)",
+        "description": "After successful authentication with Supabase, extract the JWT (access token) and return it to the frontend in the API response.",
+        "details": "Upon successful `signInWithPassword` or `signUp`, Supabase returns a session object containing the `access_token`. Extract this token and include it in the Hono response body, e.g., `c.json({ accessToken: session.access_token })`.",
+        "testStrategy": "Perform a successful login/signup via the API. Verify that the API response includes a valid JWT in the `accessToken` field.",
+        "priority": "high",
+        "dependencies": [
+          61
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 63,
+        "title": "Frontend Auth Forms (Login, Signup UI)",
+        "description": "Develop the user interface for signup and login forms on the frontend, utilizing `shadcn/ui` components.",
+        "details": "Create `src/pages/LoginPage.tsx` and `src/pages/SignupPage.tsx`. Use `shadcn/ui` components like `Input`, `Button`, `Label`, `Card` to build the forms. Include fields for email and password. Add basic client-side validation (e.g., required fields).",
+        "testStrategy": "Navigate to `/login` and `/signup`. Verify that the forms render correctly, inputs are interactive, and basic UI validation works.",
+        "priority": "medium",
+        "dependencies": [
+          54,
+          56
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 64,
+        "title": "Frontend Auth API Integration & Token Storage",
+        "description": "Implement the frontend logic to send authentication requests to the backend, store the received JWT securely, and update the global authentication state.",
+        "details": "In `LoginPage.tsx` and `SignupPage.tsx`, add event handlers for form submission. Use `fetch` or `axios` to send POST requests to `/api/auth/login` or `/api/auth/signup`. On success, store the `accessToken` in `localStorage` and update the Zustand auth store. Redirect the user to a protected route (e.g., `/stories`).",
+        "testStrategy": "Perform a full signup and login flow from the frontend. Verify that the JWT is stored in `localStorage`, the Zustand store reflects the authenticated state, and the user is redirected correctly. Test with invalid credentials to ensure error handling.",
+        "priority": "high",
+        "dependencies": [
+          55,
+          62,
+          63
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 65,
+        "title": "Backend Auth Middleware (JWT validation)",
+        "description": "Implement a Hono middleware on the backend to validate JWTs from the `Authorization` header for protected API endpoints.",
+        "details": "Create a middleware function (e.g., `src/middleware/auth.ts`) that extracts the `Bearer` token from the `Authorization` header. Use Supabase's `auth.getUser()` or a JWT library to verify the token's validity. If valid, attach user info to the context; otherwise, return a 401 Unauthorized response. Apply this middleware to protected routes using `app.use('/api/protected/*', authMiddleware)`.",
+        "testStrategy": "Create a dummy protected endpoint (e.g., `/api/protected/test`). Attempt to access it without a token, with an invalid token, and with a valid token. Verify 401 Unauthorized for invalid/missing tokens and success for valid tokens.",
+        "priority": "high",
+        "dependencies": [
+          62
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 66,
+        "title": "Supabase Schema for Stories & Illustrations",
+        "description": "Define and implement the necessary database schemas in Supabase for storing generated stories and illustrations.",
+        "details": "In Supabase SQL Editor, create tables: `stories` (columns: `id` (PK), `user_id` (FK to auth.users), `title`, `content`, `created_at`), and `illustrations` (columns: `id` (PK), `story_id` (FK to stories), `image_url`, `description`, `created_at`). Set up Row Level Security (RLS) policies to ensure users can only access their own stories.",
+        "testStrategy": "Verify that the tables are created correctly in Supabase. Attempt to insert and retrieve data using the Supabase dashboard to confirm schema integrity and RLS (if implemented at this stage).",
+        "priority": "high",
+        "dependencies": [
+          49
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 67,
+        "title": "Frontend Story Submission Form",
+        "description": "Develop the frontend form for authenticated users to submit text prompts for story generation.",
+        "details": "Create `src/pages/StoryGenerationPage.tsx`. Use `shadcn/ui` components like `Textarea`, `Button`, `Label`. The form should allow users to input a text prompt. Ensure the form is only accessible to authenticated users (e.g., by checking the Zustand auth state and redirecting if not logged in).",
+        "testStrategy": "Log in as a user and navigate to the story generation page. Verify the form renders correctly. Attempt to submit the form (it won't do anything yet, but ensure no immediate errors).",
+        "priority": "medium",
+        "dependencies": [
+          54,
+          56,
+          64
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 68,
+        "title": "Backend Story Creation Endpoint (`POST /api/stories`)",
+        "description": "Implement the backend API endpoint (`POST /api/stories`) that receives story generation requests from the frontend.",
+        "details": "Create a Hono route `app.post('/api/stories', authMiddleware, async (c) => { /* ... */ })`. This endpoint will receive the text prompt from the frontend. Ensure it's protected by the authentication middleware.",
+        "testStrategy": "Use Postman or `curl` with a valid JWT to send a POST request to `/api/stories` with a dummy text prompt. Verify that the endpoint is hit and the request body is correctly parsed.",
+        "priority": "high",
+        "dependencies": [
+          57,
+          65
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 69,
+        "title": "Zod Validation for Story Request (Backend)",
+        "description": "Implement request body validation for the `/api/stories` endpoint using `zod` to ensure incoming data is well-formed.",
+        "details": "Install `zod`. Define a Zod schema for the story request body (e.g., `z.object({ prompt: z.string().min(1) })`). Use `zod` to parse and validate the `c.req.json()` body. Return a 400 Bad Request if validation fails.",
+        "testStrategy": "Send requests to `/api/stories` with valid and invalid (e.g., empty prompt, missing field) request bodies. Verify that valid requests proceed and invalid requests return a 400 status with appropriate error messages.",
+        "priority": "high",
+        "dependencies": [
+          68
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 70,
+        "title": "Gemini API Call for Story Generation (Backend)",
+        "description": "Integrate the Google Gemini API to generate story content based on the user's prompt within the backend.",
+        "details": "Within the `/api/stories` endpoint, after validation, call the Gemini API client (from Task 59) to generate text. Use a prompt engineering strategy to guide Gemini to produce coherent story content. Example: `const model = genAI.getGenerativeModel({ model: 'gemini-pro' }); const result = await model.generateContent(prompt); const response = await result.response; const text = response.text();`.",
+        "testStrategy": "Send a valid story prompt to `/api/stories`. Verify that the backend successfully calls the Gemini API and receives a generated story text. Log the generated text to confirm content generation.",
+        "priority": "high",
+        "dependencies": [
+          59,
+          69
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 71,
+        "title": "Gemini API Call for Illustration Generation (Backend)",
+        "description": "Integrate the Google Gemini API to generate an illustration based on the generated story content, focusing on character consistency.",
+        "details": "After story generation, use the generated story text (or a summary/key elements from it) to make another call to the Gemini API (or a separate image generation model if Gemini supports it directly, or a different Google AI service for image generation). This is a key R&D item for character consistency. Example: `const imageModel = genAI.getGenerativeModel({ model: 'gemini-pro-vision' }); const imageResult = await imageModel.generateContent(storyText, 'Generate an illustration for this story...');` (Note: Gemini Pro Vision is for multimodal input, not direct image generation. A separate image generation API like Imagen or a different model might be needed. Research best approach for image generation and consistency).",
+        "testStrategy": "After story generation, verify that the backend attempts to call the image generation API. Log the API response (e.g., image URL or base64 data) to confirm image generation. Manually inspect generated images for initial consistency.",
+        "priority": "high",
+        "dependencies": [
+          59,
+          70
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 72,
+        "title": "Save Generated Content to Supabase (Backend)",
+        "description": "Persist the generated story text and illustration details (e.g., image URL) into the Supabase database.",
+        "details": "Within the `/api/stories` endpoint, after both story and illustration generation, use `supabase.from('stories').insert(...)` and `supabase.from('illustrations').insert(...)` to save the data. Ensure the `user_id` is correctly associated with the story (obtained from the JWT in the auth middleware).",
+        "testStrategy": "Submit a story generation request. After successful API calls, check the Supabase `stories` and `illustrations` tables. Verify that new entries are created with the correct content, user ID, and story-illustration linkage.",
+        "priority": "high",
+        "dependencies": [
+          58,
+          66,
+          70,
+          71
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 73,
+        "title": "Return Generated Content to Frontend (Backend)",
+        "description": "Return the generated story content and illustration URL (or data) from the backend to the frontend.",
+        "details": "After saving to Supabase, construct a JSON response containing the generated story text, illustration URL, and any other relevant metadata (e.g., story ID). Send this response back to the frontend using `c.json(...)`.",
+        "testStrategy": "Submit a story generation request from the frontend. Verify that the frontend receives a JSON response containing the generated story text and illustration URL.",
+        "priority": "high",
+        "dependencies": [
+          72
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 74,
+        "title": "Display Generated Content (Frontend)",
+        "description": "Implement the frontend logic to display the generated story text and illustration received from the backend.",
+        "details": "On the `StoryGenerationPage.tsx` or a new `StoryDisplayPage.tsx`, update the UI to render the story text and display the image using an `<img>` tag. Handle loading states and potential errors during the API call.",
+        "testStrategy": "Submit a story generation request from the frontend. Verify that the generated story text and illustration image are correctly displayed on the UI after the backend response is received.",
+        "priority": "medium",
+        "dependencies": [
+          67,
+          73
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 75,
+        "title": "Implement Robust Error Handling & Logging",
+        "description": "Implement comprehensive error handling and logging mechanisms for both frontend and backend components to improve debugging and user experience.",
+        "details": "Frontend: Use `try-catch` blocks for API calls, display user-friendly error messages using `shadcn/ui` `Toast` components. Backend: Implement centralized error handling middleware in Hono. Log errors to the console or a logging service (e.g., Cloudflare Logpush) with relevant context (request details, stack traces).",
+        "testStrategy": "Trigger various error scenarios (e.g., invalid login, missing prompt, API key issues, database errors). Verify that appropriate error messages are displayed on the frontend and detailed errors are logged on the backend.",
+        "priority": "medium",
+        "dependencies": [
+          64,
+          65,
+          69,
+          70,
+          71,
+          72
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 76,
+        "title": "End-to-End Testing & Deployment Verification",
+        "description": "Perform comprehensive end-to-end testing of all major features (authentication, story/illustration generation) and verify successful deployment to Cloudflare Pages.",
+        "details": "Conduct manual and/or automated tests covering: user signup, login, logout; submitting a story prompt; verifying story and illustration generation and display; checking Supabase data integrity. Deploy the latest code to Cloudflare Pages and verify all functionalities work correctly in the production environment.",
+        "testStrategy": "Execute a full user journey: signup, login, generate story/illustration, view generated content, logout. Verify all steps complete successfully. Confirm that the deployed application on Cloudflare Pages functions identically to the local development environment.",
+        "priority": "high",
+        "dependencies": [
+          45,
+          48,
+          64,
+          74,
+          75
         ],
         "status": "pending",
         "subtasks": []
       }
     ],
     "metadata": {
-      "created": "2025-06-26T13:20:36.089Z",
-      "updated": "2025-06-26T18:07:11.074Z",
+      "created": "2025-06-27T15:43:05.337Z",
+      "updated": "2025-06-27T16:11:39.012Z",
       "description": "Tasks for master context"
     }
   }
