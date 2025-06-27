@@ -1,0 +1,31 @@
+version: '1.0'
+project:
+  name: monogatari_weavers
+targets:
+  copilot:
+    enabled: false
+    output: .github/copilot-instructions/
+  windsurf:
+    enabled: false
+    output: .windsurf/rules/
+  cursor:
+    enabled: true
+    output: .cursor/rules/
+  claude:
+    enabled: true
+    output: CLAUDE.md
+  cline:
+    enabled: false
+    output: .clinerules
+  openai-codex:
+    enabled: true
+    output: AGENTS.md
+  gemini-cli:
+    enabled: true
+    output: GEMINI.md
+rules:
+  merge_strategy: append
+versioning:
+  config_version: '1.0'
+  backup_existing: false
+  migration_auto: true

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "mcp-router": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcpr-cli@latest",
+        "connect"
+      ],
+      "env": {
+        "MCPR_TOKEN": "mcpr_ZF13Js0UqpXDp5LztjAoyL4xY_W0YeUi"
+      }
+    }
+  }
+}
