@@ -33,7 +33,7 @@ posts.post('/', authMiddleware, async (c) => {
   const { prompt } = validationResult.data;
   try {
     // 物語生成ロジックを呼び出す
-    const story = await generateStory(prompt);
+    const story = await generateStory(c, prompt);
     
     return c.json({ message: 'Story created successfully', story: story }, 201);
   } catch (error) {

@@ -373,8 +373,62 @@
           51,
           57
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install Google Gemini Client Library and Configure Environment Variable",
+            "description": "Add the `@google/generative-ai` package to the project dependencies and ensure the `GEMINI_API_KEY` environment variable is correctly configured for both local development and deployment environments.",
+            "dependencies": [],
+            "details": "Execute `npm install @google/generative-ai` or `yarn add @google/generative-ai`. For local development, add `GEMINI_API_KEY=your_api_key_here` to your `.env` file. Ensure this variable is securely managed in production environments (e.g., via CI/CD secrets or cloud provider configurations).",
+            "status": "done",
+            "testStrategy": "Verify `package.json` contains `@google/generative-ai` as a dependency. Create a temporary script to `console.log(process.env.GEMINI_API_KEY)` to confirm it's accessible."
+          },
+          {
+            "id": 2,
+            "title": "Develop Gemini Client Initialization Module",
+            "description": "Create a dedicated utility module (e.g., `src/lib/geminiClient.ts`) responsible for initializing and exporting a `GoogleGenerativeAI` client instance using the `GEMINI_API_KEY`.",
+            "dependencies": [
+              1
+            ],
+            "details": "Import `GoogleGenerativeAI` from `@google/generative-ai`. Create a new instance: `new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)`. Export this initialized client. Implement a check to throw an error if `GEMINI_API_KEY` is not found, providing a clear message.",
+            "status": "done",
+            "testStrategy": "Create a simple unit test that imports the `geminiClient` module and asserts that the exported client instance is not null/undefined. Optionally, test the error handling for a missing API key."
+          },
+          {
+            "id": 3,
+            "title": "Implement Generic Gemini Content Generation Helper Function",
+            "description": "Create a reusable asynchronous helper function (e.g., `generateTextContent` in `src/services/geminiService.ts`) that takes a prompt string, utilizes the initialized Gemini client, and calls the `generateContent` method to retrieve AI-generated text.",
+            "dependencies": [
+              2
+            ],
+            "details": "This function should accept a string `prompt` as an argument. Use the `getGenerativeModel({ model: 'gemini-pro' })` method from the initialized client. Call `model.generateContent(prompt)` and extract the text from the response. Include basic `try-catch` for API call failures, logging errors.",
+            "status": "done",
+            "testStrategy": "Mock the `GoogleGenerativeAI` client and its `generateContent` method. Write a unit test for `generateTextContent` to ensure it correctly calls the mocked API with the given prompt and returns the expected text."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Gemini Helper into Hono Backend Endpoint",
+            "description": "Create a new Hono POST route (e.g., `/api/generate-content`) that accepts a JSON body containing a `prompt` field, calls the `generateTextContent` helper function, and returns the AI-generated response.",
+            "dependencies": [
+              3
+            ],
+            "details": "Define a new Hono route handler. Parse the request body to extract the `prompt`. Call the `generateTextContent` helper with the prompt. Send the returned AI-generated text as a JSON response. Ensure appropriate HTTP status codes (e.g., 200 for success, 400 for bad request if prompt is missing).",
+            "status": "done",
+            "testStrategy": "Use an API testing tool (e.g., Postman, Insomnia) or write an integration test to send a POST request to `/api/generate-content` with a sample prompt. Verify that the endpoint returns a 200 OK status and a non-empty string as the generated content."
+          },
+          {
+            "id": 5,
+            "title": "Implement Robust Error Handling and Response Formatting",
+            "description": "Enhance the Gemini integration by adding comprehensive error handling for various API responses (e.g., rate limits, invalid requests, internal errors) and ensure the generated content is consistently formatted before being sent to the client.",
+            "dependencies": [
+              4
+            ],
+            "details": "Refine the `try-catch` blocks in the `generateTextContent` helper and the Hono route. Map specific Gemini API errors (e.g., `429 RESOURCE_EXHAUSTED` for rate limits, `400 INVALID_ARGUMENT` for bad prompts) to appropriate HTTP status codes and user-friendly error messages. Implement post-processing on the generated text (e.g., trimming whitespace, removing unwanted characters, handling potential markdown formatting if not desired).",
+            "status": "done",
+            "testStrategy": "Simulate different error scenarios (e.g., by mocking the Gemini API to return error codes like 429, 500, or malformed responses) and verify that the Hono endpoint returns the correct HTTP status codes and informative error messages. Test with various prompt outputs to ensure consistent and clean text formatting."
+          }
+        ]
       },
       {
         "id": 60,
@@ -895,7 +949,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-28T14:59:04.592Z",
+      "updated": "2025-06-28T15:26:28.113Z",
       "description": "Tasks for master context"
     }
   }

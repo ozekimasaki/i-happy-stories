@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^1.7.0",
     "@supabase/supabase-js": "^2.50.2",
     "hono": "^4.2.3",
     "react": "^18.2.0",
