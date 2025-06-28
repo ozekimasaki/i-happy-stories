@@ -207,7 +207,7 @@
           49,
           50
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -222,7 +222,7 @@
           47,
           48
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -358,7 +358,7 @@
           51,
           57
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -387,8 +387,64 @@
           57,
           58
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Hono Auth Router",
+            "description": "Create the `functions/api/auth.ts` file and initialize a new Hono router instance specifically for authentication routes. Export this router for use in the main application.",
+            "dependencies": [],
+            "details": "Create `functions/api/auth.ts`. Import `Hono` and instantiate `const auth = new Hono();`. Export `auth` as default or named export.",
+            "status": "done",
+            "testStrategy": "Verify `functions/api/auth.ts` exists and exports a Hono instance."
+          },
+          {
+            "id": 2,
+            "title": "Implement Signup Endpoint Skeleton",
+            "description": "Define the POST route for `/signup` within the `auth` router. Implement basic request body parsing using `c.req.json()` to extract email and password, and return a placeholder success response.",
+            "dependencies": [
+              1
+            ],
+            "details": "Inside `functions/api/auth.ts`, add `auth.post('/signup', async (c) => { const body = await c.req.json(); const { email, password } = body; return c.json({ message: 'Signup endpoint hit', email, password }); });`",
+            "status": "done",
+            "testStrategy": "Use a tool like Postman/Insomnia or `curl` to send a POST request to `/api/auth/signup` (once integrated) with a JSON body containing email and password, and verify the placeholder response."
+          },
+          {
+            "id": 3,
+            "title": "Implement Login Endpoint Skeleton",
+            "description": "Define the POST route for `/login` within the `auth` router. Implement basic request body parsing using `c.req.json()` to extract email and password, and return a placeholder success response.",
+            "dependencies": [
+              1
+            ],
+            "details": "Inside `functions/api/auth.ts`, add `auth.post('/login', async (c) => { const body = await c.req.json(); const { email, password } = body; return c.json({ message: 'Login endpoint hit', email, password }); });`",
+            "status": "done",
+            "testStrategy": "Use a tool like Postman/Insomnia or `curl` to send a POST request to `/api/auth/login` (once integrated) with a JSON body containing email and password, and verify the placeholder response."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Auth Router into Main Hono App",
+            "description": "Import the `auth` router into the main Hono application file (e.g., `functions/api/index.ts`) and mount it under the `/api/auth` path.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "In `functions/api/index.ts` (or your main Hono app file), import `auth` from `./auth`. Then, add `app.route('/api/auth', auth);` to mount the auth router.",
+            "status": "done",
+            "testStrategy": "Run the application and attempt to access `/api/auth/signup` and `/api/auth/login` endpoints. Verify that the placeholder responses from subtasks 2 and 3 are returned, indicating successful routing."
+          },
+          {
+            "id": 5,
+            "title": "Add Basic Request Body Validation",
+            "description": "Enhance both the `/signup` and `/login` endpoints to perform basic validation, ensuring that `email` and `password` are present in the request body. Return a 400 Bad Request response if either is missing.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Modify the `auth.post('/signup', ...)` and `auth.post('/login', ...)` handlers. After parsing `body`, add checks: `if (!email || !password) { return c.json({ error: 'Email and password are required' }, 400); }`",
+            "status": "done",
+            "testStrategy": "Send POST requests to `/api/auth/signup` and `/api/auth/login` with missing `email`, missing `password`, or both. Verify that a 400 status code and an appropriate error message are returned."
+          }
+        ]
       },
       {
         "id": 61,
@@ -400,8 +456,62 @@
         "dependencies": [
           60
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure Supabase Client in Backend",
+            "description": "Initialize and configure the Supabase client within the backend application, ensuring it can connect to the Supabase project and is accessible for authentication operations. This includes setting up environment variables for Supabase URL and Anon Key.",
+            "dependencies": [],
+            "details": "Ensure `supabase-js` or equivalent SDK is installed and correctly imported. Configure the client with `process.env.SUPABASE_URL` and `process.env.SUPABASE_ANON_KEY`.",
+            "status": "done",
+            "testStrategy": "Write a simple test to verify the Supabase client instance is successfully created and can perform a basic (e.g., non-auth) query or just check if the client object is instantiated correctly."
+          },
+          {
+            "id": 2,
+            "title": "Implement User Registration Endpoint Core Logic",
+            "description": "Develop the backend logic for the user registration endpoint. This involves receiving `email` and `password` from the request body and calling `supabase.auth.signUp({ email, password })`.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create an API route (e.g., `/auth/signup`) that accepts POST requests. Extract `email` and `password` from the request body. Call `supabase.auth.signUp` and capture its raw response (data, error).",
+            "status": "done",
+            "testStrategy": "Use a tool like Postman or write an integration test to send a POST request to the `/auth/signup` endpoint with valid email/password and verify that Supabase receives the request (e.g., by checking Supabase logs or a mock)."
+          },
+          {
+            "id": 3,
+            "title": "Implement User Login Endpoint Core Logic",
+            "description": "Develop the backend logic for the user login endpoint. This involves receiving `email` and `password` from the request body and calling `supabase.auth.signInWithPassword({ email, password })`.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create an API route (e.g., `/auth/login`) that accepts POST requests. Extract `email` and `password` from the request body. Call `supabase.auth.signInWithPassword` and capture its raw response (data, error).",
+            "status": "done",
+            "testStrategy": "Use a tool like Postman or write an integration test to send a POST request to the `/auth/login` endpoint with valid email/password and verify that Supabase receives the request."
+          },
+          {
+            "id": 4,
+            "title": "Handle Supabase Registration Responses and Errors",
+            "description": "Implement robust error handling and success response formatting for the user registration endpoint. This includes parsing the `data` and `error` objects returned by `supabase.auth.signUp` and returning appropriate HTTP status codes (e.g., 200 OK, 400 Bad Request, 409 Conflict) and user-friendly messages.",
+            "dependencies": [
+              2
+            ],
+            "details": "For success, return 200 OK with relevant user/session data (if applicable and safe to expose). For errors, identify common Supabase errors (e.g., `User already registered`, `Invalid email format`) and map them to specific HTTP status codes (e.g., 409 for conflict, 400 for bad input) and descriptive error messages. Implement a generic 500 for unexpected errors.",
+            "status": "done",
+            "testStrategy": "Write unit/integration tests for the registration endpoint: Test with valid credentials (expect 200 OK). Test with an already registered email (expect 409 Conflict). Test with invalid email format (expect 400 Bad Request). Test with missing credentials (expect 400 Bad Request)."
+          },
+          {
+            "id": 5,
+            "title": "Handle Supabase Login Responses and Errors",
+            "description": "Implement robust error handling and success response formatting for the user login endpoint. This includes parsing the `data` and `error` objects returned by `supabase.auth.signInWithPassword` and returning appropriate HTTP status codes (e.g., 200 OK, 400 Bad Request, 401 Unauthorized) and user-friendly messages.",
+            "dependencies": [
+              3
+            ],
+            "details": "For success, return 200 OK with the user's session token and user data. For errors, identify common Supabase errors (e.g., `Invalid login credentials`, `User not found`) and map them to specific HTTP status codes (e.g., 401 for unauthorized, 400 for bad input) and descriptive error messages. Implement a generic 500 for unexpected errors.",
+            "status": "done",
+            "testStrategy": "Write unit/integration tests for the login endpoint: Test with valid credentials (expect 200 OK and session data). Test with incorrect password for an existing user (expect 401 Unauthorized). Test with a non-existent email (expect 401 Unauthorized or 404 Not Found, depending on desired security level). Test with missing credentials (expect 400 Bad Request)."
+          }
+        ]
       },
       {
         "id": 62,
@@ -413,7 +523,7 @@
         "dependencies": [
           61
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -456,7 +566,61 @@
           62
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Hono Auth Middleware File",
+            "description": "Create the `src/middleware/auth.ts` file and define the basic Hono middleware function structure, including importing necessary Hono types and the `Context` object.",
+            "dependencies": [],
+            "details": "This subtask sets up the foundational file and boilerplate for the authentication middleware. The function should accept `c` (Context) and `next` (Next function) parameters.",
+            "status": "pending",
+            "testStrategy": "Verify the creation of `src/middleware/auth.ts` and that it contains a valid Hono middleware function signature."
+          },
+          {
+            "id": 2,
+            "title": "Extract and Validate Authorization Header",
+            "description": "Within the `auth.ts` middleware, implement logic to extract the `Bearer` token from the `Authorization` header. If the header is missing or not in 'Bearer <token>' format, immediately return a `401 Unauthorized` Hono response.",
+            "dependencies": [
+              1
+            ],
+            "details": "Access `c.req.header('Authorization')`. Check for existence and the 'Bearer ' prefix. If invalid, use `c.json({ message: 'Unauthorized' }, 401)`.",
+            "status": "pending",
+            "testStrategy": "Unit test the middleware with requests having no Authorization header, malformed headers, and correctly formatted 'Bearer' headers to ensure proper token extraction or 401 response."
+          },
+          {
+            "id": 3,
+            "title": "Implement JWT Verification Logic",
+            "description": "Integrate a JWT verification mechanism (e.g., Supabase `auth.getUser()` or a dedicated JWT library like `jose` or `jsonwebtoken`) to validate the extracted token's signature, expiration, and other claims. Handle any errors during verification.",
+            "dependencies": [
+              2
+            ],
+            "details": "This is the core security logic. If using Supabase, call `supabase.auth.getUser(token)`. If using a library, use its `verify` function with your JWT secret/public key. Wrap this in a `try-catch` block to handle verification failures.",
+            "status": "pending",
+            "testStrategy": "Unit test the verification logic with valid, expired, tampered, and malformed JWTs to ensure correct validation outcomes and error handling."
+          },
+          {
+            "id": 4,
+            "title": "Attach User Info to Context or Return Unauthorized",
+            "description": "Based on the JWT verification result from the previous step, if the token is valid, attach the decoded user information (e.g., `userId`, `email`, `role`) to the Hono context using `c.set('user', userData)`. If the token is invalid or verification fails, return a `401 Unauthorized` Hono response.",
+            "dependencies": [
+              3
+            ],
+            "details": "Ensure the `user` object attached to the context is accessible by subsequent route handlers. For invalid tokens, use `c.json({ message: 'Invalid or expired token' }, 401)`.",
+            "status": "pending",
+            "testStrategy": "Integration test the middleware with valid and invalid tokens. For valid tokens, verify that user data is correctly attached to the context. For invalid tokens, confirm a 401 response is returned."
+          },
+          {
+            "id": 5,
+            "title": "Apply Middleware to Protected Routes and Test",
+            "description": "Import the completed `authMiddleware` into the main Hono application file (e.g., `src/index.ts` or `src/app.ts`) and apply it to a specific path pattern using `app.use('/api/protected/*', authMiddleware)`. Create a simple protected endpoint to verify its functionality.",
+            "dependencies": [
+              4
+            ],
+            "details": "Add a dummy route like `/api/protected/data` that attempts to access `c.get('user')`. Test access with and without a valid JWT.",
+            "status": "pending",
+            "testStrategy": "End-to-end test by making HTTP requests to the protected endpoint: 1) without any token (expect 401), 2) with an invalid token (expect 401), and 3) with a valid token (expect 200 and access to user data)."
+          }
+        ]
       },
       {
         "id": 66,
@@ -468,7 +632,7 @@
         "dependencies": [
           49
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -622,7 +786,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-28T07:30:20.971Z",
+      "updated": "2025-06-28T09:49:04.910Z",
       "description": "Tasks for master context"
     }
   }
