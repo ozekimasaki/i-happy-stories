@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../../middleware/auth';
 import { generateStory } from '../../services/storyService';
+import { storyRequestSchema } from '../../schemas/storySchema';
 
 const posts = new Hono();
 
@@ -18,14 +19,18 @@ posts.post('/', authMiddleware, async (c) => {
   const user = c.get('user');
   console.log('Authenticated user:', user);
 
-  // リクエストボディをパースして検証
-  const body = await c.req.json().catch(() => ({})); // パースエラーの場合は空オブジェクト
-  const { prompt } = body;
+  const body = await c.req.json().catch(() => ({}));
 
-  if (typeof prompt !== 'string' || prompt.trim() === '') {
-    return c.json({ error: 'A non-empty prompt is required' }, 400);
+  const validationResult = storyRequestSchema.safeParse(body);
+
+  if (!validationResult.success) {
+    const formattedErrors = validationResult.error.issues.map(
+      (issue) => `${issue.path.join('.')}: ${issue.message}`
+    );
+    return c.json({ errors: formattedErrors }, 400);
   }
-
+  
+  const { prompt } = validationResult.data;
   try {
     // 物語生成ロジックを呼び出す
     const story = await generateStory(prompt);

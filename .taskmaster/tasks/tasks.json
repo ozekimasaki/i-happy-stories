@@ -661,7 +661,7 @@
           57,
           65
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -729,8 +729,62 @@
         "dependencies": [
           68
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Zod Schema for Story Request",
+            "description": "Create a `zod` schema that accurately represents the expected structure and types of the `/api/stories` request body.",
+            "dependencies": [],
+            "details": "Install `zod` if not already installed (`npm install zod` or `yarn add zod`). Define the `storyRequestSchema` using `z.object({ prompt: z.string().min(1, 'Prompt cannot be empty.') })`. Consider placing this schema definition in a dedicated file (e.g., `src/schemas/storySchema.ts`) for better organization.",
+            "status": "done",
+            "testStrategy": "N/A (schema definition only)"
+          },
+          {
+            "id": 2,
+            "title": "Integrate Zod Schema into `/api/stories` Handler",
+            "description": "Modify the `/api/stories` POST handler to use the defined Zod schema for parsing the incoming request body.",
+            "dependencies": [
+              1
+            ],
+            "details": "Locate the `POST` handler for `/api/stories`. Import the `storyRequestSchema` defined in Subtask 1. Inside the handler, before processing the request, attempt to parse the `c.req.json()` body using `storyRequestSchema.safeParse(await c.req.json())`. Store the result in a variable (e.g., `validationResult`).",
+            "status": "done",
+            "testStrategy": "Manually send a valid request to the `/api/stories` endpoint. Verify that the request is processed without immediate errors related to schema integration. No specific validation error handling is expected at this stage."
+          },
+          {
+            "id": 3,
+            "title": "Implement Successful Validation Logic",
+            "description": "Extract the validated data when `zod` parsing is successful and proceed with the existing business logic for creating a story.",
+            "dependencies": [
+              2
+            ],
+            "details": "After calling `storyRequestSchema.safeParse()`, check `if (validationResult.success)`. If true, destructure `validationResult.data` to get the validated fields (e.g., `const { prompt } = validationResult.data;`). Replace any direct usage of `c.req.json().prompt` with `prompt` in the subsequent story creation logic.",
+            "status": "done",
+            "testStrategy": "Send a valid request (e.g., `{ \"prompt\": \"A cat flying a spaceship\" }`) to `/api/stories`. Verify that the story is created successfully and the response is as expected for a successful operation (e.g., 200 OK or 201 Created)."
+          },
+          {
+            "id": 4,
+            "title": "Implement Failed Validation Error Handling",
+            "description": "Return a `400 Bad Request` response with detailed error messages if `zod` validation fails.",
+            "dependencies": [
+              3
+            ],
+            "details": "In the `else` block of the `if (validationResult.success)` check, access `validationResult.error.issues` to get the validation errors. Format these issues into a user-friendly array of strings (e.g., `['prompt: Prompt cannot be empty.']`). Return `c.json({ errors: formattedErrors }, 400)`.",
+            "status": "done",
+            "testStrategy": "Send various invalid requests to `/api/stories`: 1. Missing `prompt` field (e.g., `{}`). 2. Empty `prompt` string (e.g., `{ \"prompt\": \"\" }`). 3. `prompt` with incorrect type (e.g., `{ \"prompt\": 123 }`). For each, verify that a `400 Bad Request` status is returned and the response body contains appropriate error messages."
+          },
+          {
+            "id": 5,
+            "title": "Add Unit/Integration Tests for Validation",
+            "description": "Write automated tests to cover both successful and failed validation scenarios for the `/api/stories` endpoint.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create a new test file (e.g., `src/api/stories.test.ts`). Use a testing framework (e.g., Vitest, Jest, Supertest) to simulate requests to the `/api/stories` endpoint. Include test cases for: 1. Valid request (expect 200/201). 2. Missing `prompt` (expect 400 with specific error). 3. Empty `prompt` (expect 400 with specific error). 4. `prompt` of wrong type (expect 400 with specific error). Assert on both status codes and response body content.",
+            "status": "done",
+            "testStrategy": "Run the automated test suite. All validation-related tests should pass, confirming the robustness of the implemented validation logic."
+          }
+        ]
       },
       {
         "id": 70,
@@ -841,7 +895,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-28T14:40:41.208Z",
+      "updated": "2025-06-28T14:59:04.592Z",
       "description": "Tasks for master context"
     }
   }
