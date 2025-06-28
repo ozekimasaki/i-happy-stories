@@ -691,7 +691,7 @@
               2
             ],
             "details": "Call the designated story generation function (e.g., `storyService.generateStory(prompt)`) with the extracted and validated prompt. Handle the asynchronous nature of this call, awaiting its completion.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock the `storyService.generateStory` function to return a predefined story. Send a valid request to the endpoint and verify that the mock function is called with the correct prompt."
           },
           {
@@ -702,7 +702,7 @@
               3
             ],
             "details": "After the story generation logic successfully returns the generated story text, format the response body (e.g., `{ story: 'Generated story text' }`) and send it using `c.json()` with an HTTP 200 status code.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Send a valid request to the endpoint. Verify that the response body contains the expected generated story text and that the HTTP status code is 200 OK."
           },
           {
@@ -841,7 +841,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-28T14:35:34.641Z",
+      "updated": "2025-06-28T14:38:09.581Z",
       "description": "Tasks for master context"
     }
   }

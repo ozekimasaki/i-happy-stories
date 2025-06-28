@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../../middleware/auth';
+import { generateStory } from '../../services/storyService';
 
 const posts = new Hono();
 
@@ -25,9 +26,10 @@ posts.post('/', authMiddleware, async (c) => {
     return c.json({ error: 'A non-empty prompt is required' }, 400);
   }
 
-  // TODO: ここでプロンプトを使った処理を実装
+  // 物語生成ロジックを呼び出す
+  const story = await generateStory(prompt);
   
-  return c.json({ message: 'Create a new post', received_prompt: prompt }, 201);
+  return c.json({ message: 'Story created successfully', story: story }, 201);
 });
 
 // 投稿を更新
