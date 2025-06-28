@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { authMiddleware } from '../../middleware/auth';
 
 const posts = new Hono();
 
@@ -11,8 +12,12 @@ posts.get('/:id', (c) => {
   return c.json({ post: { id }, message: `Get post ${id}` });
 });
 
-// 新しい投稿を作成
-posts.post('/', (c) => c.json({ message: 'Create a new post' }, 201));
+// 新しい投稿を作成 (認証が必要)
+posts.post('/', authMiddleware, (c) => {
+  const user = c.get('user');
+  console.log('Authenticated user:', user);
+  return c.json({ message: 'Create a new post' }, 201);
+});
 
 // 投稿を更新
 posts.put('/:id', (c) => {

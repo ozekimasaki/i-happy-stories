@@ -669,7 +669,7 @@
             "description": "Set up the basic Hono `POST /api/stories` route and ensure the `authMiddleware` is correctly applied to protect the endpoint.",
             "dependencies": [],
             "details": "Create the `app.post('/api/stories', authMiddleware, async (c) => { /* ... */ })` structure within the Hono application. Verify that `authMiddleware` is properly imported and accessible in the scope.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Attempt to access the endpoint without authentication; it should return an unauthorized error. Access with valid authentication; it should reach the handler (even if it currently does nothing)."
           },
           {
@@ -841,7 +841,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-28T09:53:30.456Z",
+      "updated": "2025-06-28T14:31:27.733Z",
       "description": "Tasks for master context"
     }
   }
