@@ -680,7 +680,7 @@
               1
             ],
             "details": "Use `c.req.json()` to asynchronously parse the request body. Implement schema validation (e.g., using Zod) to ensure the `prompt` property is present, is a string, and meets any length constraints. Return an HTTP 400 Bad Request error if validation fails.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Send requests with missing `prompt`, `prompt` of an incorrect type (e.g., number), and a valid `prompt` string. Verify that appropriate 400 responses are returned for invalid inputs and that valid inputs are successfully parsed."
           },
           {
@@ -841,7 +841,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-28T14:31:27.733Z",
+      "updated": "2025-06-28T14:35:34.641Z",
       "description": "Tasks for master context"
     }
   }

@@ -13,10 +13,21 @@ posts.get('/:id', (c) => {
 });
 
 // 新しい投稿を作成 (認証が必要)
-posts.post('/', authMiddleware, (c) => {
+posts.post('/', authMiddleware, async (c) => {
   const user = c.get('user');
   console.log('Authenticated user:', user);
-  return c.json({ message: 'Create a new post' }, 201);
+
+  // リクエストボディをパースして検証
+  const body = await c.req.json().catch(() => ({})); // パースエラーの場合は空オブジェクト
+  const { prompt } = body;
+
+  if (typeof prompt !== 'string' || prompt.trim() === '') {
+    return c.json({ error: 'A non-empty prompt is required' }, 400);
+  }
+
+  // TODO: ここでプロンプトを使った処理を実装
+  
+  return c.json({ message: 'Create a new post', received_prompt: prompt }, 201);
 });
 
 // 投稿を更新
