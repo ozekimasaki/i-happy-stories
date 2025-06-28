@@ -26,10 +26,15 @@ posts.post('/', authMiddleware, async (c) => {
     return c.json({ error: 'A non-empty prompt is required' }, 400);
   }
 
-  // 物語生成ロジックを呼び出す
-  const story = await generateStory(prompt);
-  
-  return c.json({ message: 'Story created successfully', story: story }, 201);
+  try {
+    // 物語生成ロジックを呼び出す
+    const story = await generateStory(prompt);
+    
+    return c.json({ message: 'Story created successfully', story: story }, 201);
+  } catch (error) {
+    console.error('Error generating story:', error);
+    return c.json({ error: 'Failed to generate story due to an internal error' }, 500);
+  }
 });
 
 // 投稿を更新

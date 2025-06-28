@@ -714,7 +714,7 @@
               4
             ],
             "details": "Wrap the story generation and response logic in a `try-catch` block. Catch specific errors (e.g., `StoryGenerationFailedError`) and return appropriate HTTP 500 Internal Server Error responses with a user-friendly message. Implement a general catch-all for unexpected errors, returning a generic 500 error. Ensure consistent error response format (e.g., `{ error: 'message' }`).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simulate failures in the `storyService.generateStory` function (e.g., by making it throw an error). Verify that the endpoint returns an HTTP 500 status code and an appropriate error message in the response body."
           }
         ]
@@ -841,7 +841,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-28T14:38:09.581Z",
+      "updated": "2025-06-28T14:40:41.208Z",
       "description": "Tasks for master context"
     }
   }
