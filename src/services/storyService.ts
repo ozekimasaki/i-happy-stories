@@ -1,28 +1,59 @@
 import { Context } from 'hono';
+import { getSupabase } from '../lib/supabase';
 import { getGeminiClient } from '../lib/geminiClient';
+import { Story } from '../../types/hono';
 
-export const generateStory = async (c: Context, prompt: string): Promise<string> => {
+export const createStory = async (c: Context, prompt: string): Promise<Story> => {
   try {
+    const supabase = getSupabase(c);
+    const user = c.get('user');
+
+    if (!user) {
+      throw new Error('User not found.');
+    }
+    
     console.log(`Generating story for prompt: "${prompt}"`);
     const genAI = getGeminiClient(c);
     
     const result = await genAI.models.generateContent({
         model: "gemini-1.5-flash",
-        contents: prompt
+        contents: `以下のプロンプトに基づいて、短い物語を創作してください。物語の最初の行がタイトルになります。
+
+プロンプト: ${prompt}`
     });
 
-    // オプショナルチェイニングとNull合体演算子で安全にテキストを抽出
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    if (text) {
-      return text;
-    } else {
+    if (!text) {
       throw new Error('No content generated or unexpected response structure.');
     }
 
+    const lines = text.trim().split('\n');
+    const title = lines[0];
+    const content = lines.slice(1).join('\n').trim();
+
+    const { data, error } = await supabase
+      .from('stories')
+      .insert({
+        user_id: user.id,
+        title: title,
+        content: content,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving story to Supabase:', error);
+      throw new Error('Failed to save story to database.');
+    }
+
+    return data as Story;
+
   } catch (error) {
-    console.error('Error generating story with Gemini:', error);
-    // エラーを呼び出し元に伝播させて、ルートハンドラで処理する
-    throw new Error('Failed to generate story using Gemini API.');
+    console.error('Error in createStory:', error);
+    if (error instanceof Error) {
+        throw error;
+    }
+    throw new Error('An unknown error occurred while creating the story.');
   }
 }; 

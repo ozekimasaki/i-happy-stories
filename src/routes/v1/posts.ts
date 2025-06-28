@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../../middleware/auth';
-import { generateStory } from '../../services/storyService';
+import { createStory } from '../../services/storyService';
+import { createIllustration } from '../../services/illustrationService';
 import { storyRequestSchema } from '../../schemas/storySchema';
 
 const posts = new Hono();
@@ -32,13 +33,23 @@ posts.post('/', authMiddleware, async (c) => {
   
   const { prompt } = validationResult.data;
   try {
-    // 物語生成ロジックを呼び出す
-    const story = await generateStory(c, prompt);
+    // 1. 物語を生成・保存
+    const story = await createStory(c, prompt);
     
-    return c.json({ message: 'Story created successfully', story: story }, 201);
+    // 2. 物語のキーシーンに基づいたイラストを生成・保存
+    const illustrationPrompt = `この物語の重要な場面を表現するイラストを生成してください。スタイルはアニメ風でお願いします。: ${story.content.substring(0, 500)}`;
+    const illustration = await createIllustration(c, story.id, illustrationPrompt);
+
+    return c.json({ 
+      message: 'Story and illustration created and saved successfully', 
+      story: story,
+      illustration: illustration
+    }, 201);
+
   } catch (error) {
-    console.error('Error generating story:', error);
-    return c.json({ error: 'Failed to generate story due to an internal error' }, 500);
+    console.error('Error in post creation endpoint:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return c.json({ error: `Failed to create story or illustration: ${errorMessage}` }, 500);
   }
 });
 
