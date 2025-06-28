@@ -289,7 +289,62 @@
           47
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Hono App and Base `/api` Route in `functions/api/[[path]].ts`",
+            "description": "Set up the main Hono application instance within `functions/api/[[path]].ts` and configure it to serve as the entry point for all `/api/*` routes, leveraging Cloudflare Pages Functions' catch-all routing.",
+            "dependencies": [],
+            "details": "In `functions/api/[[path]].ts`, import `Hono` from 'hono' and create `const app = new Hono();`. Ensure the file exports `app.fetch` as the default handler. This file will implicitly handle all requests under the `/api/` path due to its `[[path]]` naming convention.",
+            "status": "pending",
+            "testStrategy": "N/A (initial setup, no direct testable endpoint yet)"
+          },
+          {
+            "id": 2,
+            "title": "Create `authRoutes` Hono Instance for Authentication Endpoints",
+            "description": "Create a new, separate Hono instance specifically for authentication-related API endpoints. This instance will encapsulate routes like `/login`, `/register`, etc., which will eventually be mounted under `/api/auth`.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a new file, e.g., `functions/api/authRoutes.ts`. Inside this file, import `Hono` and create `const authRoutes = new Hono();`. Export `authRoutes` as the default. For now, add a placeholder route like `authRoutes.get('/test', (c) => c.text('Auth test endpoint'));` to confirm it's a valid Hono instance.",
+            "status": "pending",
+            "testStrategy": "N/A (not yet integrated into the main app)"
+          },
+          {
+            "id": 3,
+            "title": "Create `storyRoutes` Hono Instance for Story Management Endpoints",
+            "description": "Create another new, separate Hono instance specifically for story management-related API endpoints. This instance will encapsulate routes like `/create`, `/:id`, etc., which will eventually be mounted under `/api/stories`.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a new file, e.g., `functions/api/storyRoutes.ts`. Inside this file, import `Hono` and create `const storyRoutes = new Hono();`. Export `storyRoutes` as the default. For now, add a placeholder route like `storyRoutes.get('/test', (c) => c.text('Stories test endpoint'));` to confirm it's a valid Hono instance.",
+            "status": "pending",
+            "testStrategy": "N/A (not yet integrated into the main app)"
+          },
+          {
+            "id": 4,
+            "title": "Integrate `authRoutes` and `storyRoutes` into Main API App",
+            "description": "Import the `authRoutes` and `storyRoutes` Hono instances into `functions/api/[[path]].ts` and mount them under their respective `/auth` and `/stories` base paths using `app.route()`, ensuring they are accessible via `/api/auth/*` and `/api/stories/*`.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "In `functions/api/[[path]].ts`, import `authRoutes` from './authRoutes' and `storyRoutes` from './storyRoutes'. Then, add `app.route('/auth', authRoutes);` and `app.route('/stories', storyRoutes);` to the main `app` instance. The `[[path]].ts` file handles the `/api` prefix, so `app.route('/auth', ...)` correctly maps to `/api/auth`.",
+            "status": "pending",
+            "testStrategy": "N/A (full verification in the next step)"
+          },
+          {
+            "id": 5,
+            "title": "Add Basic Test Endpoints and Verify API Routing Structure",
+            "description": "Implement simple GET endpoints within each sub-route (`authRoutes`, `storyRoutes`) and a root `/api` endpoint to confirm that the overall routing structure is correctly set up and accessible as per the PRD.",
+            "dependencies": [
+              4
+            ],
+            "details": "1. In `functions/api/[[path]].ts`, add `app.get('/', (c) => c.text('Hono API Root Operational'));`.\n2. In `functions/api/authRoutes.ts`, change the placeholder to `authRoutes.get('/status', (c) => c.text('Auth API operational'));`.\n3. In `functions/api/storyRoutes.ts`, change the placeholder to `storyRoutes.get('/status', (c) => c.text('Stories API operational'));`.",
+            "status": "pending",
+            "testStrategy": "Deploy the application (e.g., to a local development server or a staging environment). Use `curl` or a browser to hit the following endpoints and verify responses:\n- `GET /api` (should return 'Hono API Root Operational')\n- `GET /api/auth/status` (should return 'Auth API operational')\n- `GET /api/stories/status` (should return 'Stories API operational')\n- Verify that requests to non-existent paths (e.g., `/api/nonexistent` or `/api/auth/nonexistent`) return a 404 Not Found response."
+          }
+        ]
       },
       {
         "id": 58,
