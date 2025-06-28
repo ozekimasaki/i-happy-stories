@@ -565,7 +565,7 @@
         "dependencies": [
           62
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -573,7 +573,7 @@
             "description": "Create the `src/middleware/auth.ts` file and define the basic Hono middleware function structure, including importing necessary Hono types and the `Context` object.",
             "dependencies": [],
             "details": "This subtask sets up the foundational file and boilerplate for the authentication middleware. The function should accept `c` (Context) and `next` (Next function) parameters.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify the creation of `src/middleware/auth.ts` and that it contains a valid Hono middleware function signature."
           },
           {
@@ -584,7 +584,7 @@
               1
             ],
             "details": "Access `c.req.header('Authorization')`. Check for existence and the 'Bearer ' prefix. If invalid, use `c.json({ message: 'Unauthorized' }, 401)`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the middleware with requests having no Authorization header, malformed headers, and correctly formatted 'Bearer' headers to ensure proper token extraction or 401 response."
           },
           {
@@ -595,7 +595,7 @@
               2
             ],
             "details": "This is the core security logic. If using Supabase, call `supabase.auth.getUser(token)`. If using a library, use its `verify` function with your JWT secret/public key. Wrap this in a `try-catch` block to handle verification failures.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the verification logic with valid, expired, tampered, and malformed JWTs to ensure correct validation outcomes and error handling."
           },
           {
@@ -606,7 +606,7 @@
               3
             ],
             "details": "Ensure the `user` object attached to the context is accessible by subsequent route handlers. For invalid tokens, use `c.json({ message: 'Invalid or expired token' }, 401)`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Integration test the middleware with valid and invalid tokens. For valid tokens, verify that user data is correctly attached to the context. For invalid tokens, confirm a 401 response is returned."
           },
           {
@@ -617,7 +617,7 @@
               4
             ],
             "details": "Add a dummy route like `/api/protected/data` that attempts to access `c.get('user')`. Test access with and without a valid JWT.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "End-to-end test by making HTTP requests to the protected endpoint: 1) without any token (expect 401), 2) with an invalid token (expect 401), and 3) with a valid token (expect 200 and access to user data)."
           }
         ]
@@ -662,7 +662,62 @@
           65
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Hono Route and Apply Authentication Middleware",
+            "description": "Set up the basic Hono `POST /api/stories` route and ensure the `authMiddleware` is correctly applied to protect the endpoint.",
+            "dependencies": [],
+            "details": "Create the `app.post('/api/stories', authMiddleware, async (c) => { /* ... */ })` structure within the Hono application. Verify that `authMiddleware` is properly imported and accessible in the scope.",
+            "status": "pending",
+            "testStrategy": "Attempt to access the endpoint without authentication; it should return an unauthorized error. Access with valid authentication; it should reach the handler (even if it currently does nothing)."
+          },
+          {
+            "id": 2,
+            "title": "Parse and Validate Story Prompt from Request Body",
+            "description": "Implement logic within the endpoint handler to parse the incoming JSON request body and validate that it contains a `prompt` field of type string.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use `c.req.json()` to asynchronously parse the request body. Implement schema validation (e.g., using Zod) to ensure the `prompt` property is present, is a string, and meets any length constraints. Return an HTTP 400 Bad Request error if validation fails.",
+            "status": "pending",
+            "testStrategy": "Send requests with missing `prompt`, `prompt` of an incorrect type (e.g., number), and a valid `prompt` string. Verify that appropriate 400 responses are returned for invalid inputs and that valid inputs are successfully parsed."
+          },
+          {
+            "id": 3,
+            "title": "Integrate with Story Generation Logic",
+            "description": "Integrate the validated prompt with the actual story generation logic, which might involve calling an internal service function or an external AI model API.",
+            "dependencies": [
+              2
+            ],
+            "details": "Call the designated story generation function (e.g., `storyService.generateStory(prompt)`) with the extracted and validated prompt. Handle the asynchronous nature of this call, awaiting its completion.",
+            "status": "pending",
+            "testStrategy": "Mock the `storyService.generateStory` function to return a predefined story. Send a valid request to the endpoint and verify that the mock function is called with the correct prompt."
+          },
+          {
+            "id": 4,
+            "title": "Implement Success Response",
+            "description": "Construct and send a successful HTTP 200 OK response containing the newly generated story back to the frontend.",
+            "dependencies": [
+              3
+            ],
+            "details": "After the story generation logic successfully returns the generated story text, format the response body (e.g., `{ story: 'Generated story text' }`) and send it using `c.json()` with an HTTP 200 status code.",
+            "status": "pending",
+            "testStrategy": "Send a valid request to the endpoint. Verify that the response body contains the expected generated story text and that the HTTP status code is 200 OK."
+          },
+          {
+            "id": 5,
+            "title": "Implement Robust Error Handling for Endpoint",
+            "description": "Add comprehensive error handling to catch various potential issues, such as internal server errors during story generation or unexpected exceptions, returning appropriate HTTP status codes and informative messages.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Wrap the story generation and response logic in a `try-catch` block. Catch specific errors (e.g., `StoryGenerationFailedError`) and return appropriate HTTP 500 Internal Server Error responses with a user-friendly message. Implement a general catch-all for unexpected errors, returning a generic 500 error. Ensure consistent error response format (e.g., `{ error: 'message' }`).",
+            "status": "pending",
+            "testStrategy": "Simulate failures in the `storyService.generateStory` function (e.g., by making it throw an error). Verify that the endpoint returns an HTTP 500 status code and an appropriate error message in the response body."
+          }
+        ]
       },
       {
         "id": 69,
@@ -786,7 +841,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-28T09:49:04.910Z",
+      "updated": "2025-06-28T09:53:30.456Z",
       "description": "Tasks for master context"
     }
   }
