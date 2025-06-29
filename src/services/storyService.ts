@@ -52,19 +52,26 @@ ${userInput}
 必ず、有効なJSONオブジェクトのみを返してください。他のテキストや説明は一切含めないでください。
 例:
 {
-  "story_text": "たいへん！いじわるな『イヤイヤさん』が、くつを隠しちゃった！ママは、ひかりちゃんが心配で、ちょっぴり大きな声が出ちゃった。でも、ぎゅっと抱きしめたら、二人の心は一つになって、イヤイヤさんを一緒にやっつけたんだ。",
-  "illustration_prompt": "A gentle, heartwarming anime style illustration. A mother is hugging her little daughter tightly. Next to them, a small, grumpy-looking but cute monster ('Mr. No-No') is comically hiding a pair of shoes behind its back. The scene is filled with warm, soft light, conveying a sense of love and resolution. The mother and daughter are smiling at each other."
-}
+      "story_text": "（ここに物語を記述。ルール：1行目にタイトル、2行目以降に本文を、必ず改行で区切って記述してください。）",
+      "illustration_prompt": "（ここに、生成した物語を要約した、英語のイラスト生成プロンプトを記述）"
+    }
 `;
 
     const result = await genAI.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: detailedPrompt }] }],
     });
 
-    const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    let responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!responseText) {
       throw new Error('AIからの応答が空か、予期しない形式です。');
+    }
+
+    // AIの応答からマークダウンのコードブロックを削除
+    const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+    const match = responseText.match(jsonRegex);
+    if (match?.[1]) {
+      responseText = match[1];
     }
 
     const generatedContent = JSON.parse(responseText);
@@ -74,9 +81,10 @@ ${userInput}
         throw new Error('AIが生成したJSONに必要なキー（story_textまたはillustration_prompt）が含まれていません。');
     }
 
-    const lines = story_text.trim().split('\\n');
-    const title = lines[0];
-    const content = lines.slice(1).join('\\n').trim();
+    // タイトルと本文を抽出（プロンプトで形式を指定）
+    const lines = story_text.trim().split('\n');
+    const title = lines[0] || '';
+    const content = lines.slice(1).join('\n').trim();
 
     const { data, error } = await supabase
       .from('stories')
