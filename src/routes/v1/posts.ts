@@ -49,10 +49,7 @@ posts.get('/:id', authMiddleware, async (c) => {
 // 新しい投稿を作成 (認証が必要)
 posts.post('/', authMiddleware, async (c) => {
   const user = c.get('user');
-  console.log('Authenticated user:', user);
-
   const body = await c.req.json().catch(() => ({}));
-
   const validationResult = storyRequestSchema.safeParse(body);
 
   if (!validationResult.success) {
@@ -64,21 +61,22 @@ posts.post('/', authMiddleware, async (c) => {
   
   const { prompt } = validationResult.data;
   try {
-    // 1. 物語を生成・保存
-    const story = await createStory(c, prompt);
+    // 1. 物語とイラスト用プロンプトを同時に生成
+    const { story, illustrationPrompt } = await createStory(c, prompt);
+    
     let illustration = null;
     
     try {
-      // 2. 物語のキーシーンに基づいたイラストを生成・保存
-      const illustrationPrompt = `この物語の重要な場面を表現するイラストを生成してください。スタイルはアニメ風でお願いします。: ${story.content.substring(0, 500)}`;
+      // 2. AIが生成したプロンプトを使ってイラストを生成
+      console.log(`Generating illustration with prompt: "${illustrationPrompt}"`);
       illustration = await createIllustration(c, story.id, illustrationPrompt);
     } catch (illustrationError) {
       console.error('Failed to create illustration, but story was saved:', illustrationError);
-      // イラスト生成が失敗しても、物語は成功しているので、エラーは返さない
+      // イラスト生成が失敗しても、物語は成功しているのでエラーは返さない
     }
 
     return c.json({ 
-      message: 'Story created successfully. Illustration creation status may vary.', 
+      message: 'Story and illustration prompt created successfully. Illustration generation may vary.', 
       story: story,
       illustration: illustration
     }, 201);
@@ -102,5 +100,4 @@ posts.delete('/:id', (c) => {
     return c.json({ message: `Delete post ${id}` });
 });
 
-
-export default posts; 
+export default posts;

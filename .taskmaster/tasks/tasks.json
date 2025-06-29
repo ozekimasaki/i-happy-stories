@@ -1490,7 +1490,7 @@
           74,
           75
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1533,7 +1533,7 @@
               3
             ],
             "details": "Trigger the CI/CD pipeline or manually deploy the current main/production branch to Cloudflare Pages. Monitor the deployment process for any errors or warnings, ensuring a successful build and publish.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Verify deployment status in Cloudflare Pages dashboard. Check build logs for success and absence of critical errors. Confirm the new version is live."
           },
           {
@@ -1544,7 +1544,7 @@
               4
             ],
             "details": "Repeat critical end-to-end tests for authentication (signup, login, logout), story/illustration generation, and display on the Cloudflare Pages URL. Verify responsiveness, performance, and any environment-specific configurations in the live setting.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manual smoke testing of key features (login, generate story, view story) on the deployed URL. Compare behavior to local environment and ensure no regressions or production-specific issues."
           }
         ]
@@ -1638,7 +1638,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T14:39:24.949Z",
+      "updated": "2025-06-29T14:47:10.895Z",
       "description": "Tasks for master context"
     }
   }
