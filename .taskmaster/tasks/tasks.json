@@ -1499,7 +1499,7 @@
         "description": "Implement a backend API endpoint to retrieve a list of user-generated stories and create a new frontend page to display these stories, including a navigation link.",
         "details": "Backend (Hono): Create a new GET endpoint (e.g., /api/stories) to fetch stories. Implement logic to query Supabase for stories, ensuring proper authentication to filter by user_id. Consider adding pagination parameters for future scalability. Return a JSON array of story objects, including relevant metadata like id, title, creation date, and a snippet or illustration URL. Integrate robust error handling and logging as per Task 75. Frontend (Next.js/React): Create a new page component (e.g., /app/stories/page.tsx) responsible for fetching and displaying the list of stories. Utilize UI components (e.g., shadcn/ui Card or Table) to present the stories in an organized manner. Implement loading states and display user-friendly error messages using the Toast component from Task 75. Add a prominent link to this new 'My Stories' or 'Story List' page in the main application navigation.",
         "testStrategy": "Backend: Use a tool like Postman or curl to directly call the new API endpoint. Verify that it returns a list of stories for an authenticated user and an empty array for a user with no stories. Test with an unauthenticated request to ensure proper authorization handling (e.g., 401 Unauthorized). Frontend: Navigate to the new 'My Stories' page via the navigation link. Verify that the page loads correctly and displays the list of stories with accurate titles and details. Confirm that loading indicators are shown during data fetching. Simulate API errors (e.g., by temporarily modifying the backend response) to ensure appropriate error messages are displayed on the frontend. Verify the navigation link is correctly integrated and functional.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           72,
           75
@@ -1523,7 +1523,7 @@
               1
             ],
             "details": "Modify the `/api/stories` endpoint to accept optional query parameters like `offset` and `limit` (e.g., `?offset=0&limit=10`). Implement the Supabase query to apply these pagination parameters. Integrate error handling for database query failures, authentication issues, or invalid parameters, returning appropriate HTTP status codes and error messages. Ensure logging is implemented for critical errors as per Task 75 guidelines.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test the `/api/stories` endpoint with various `offset` and `limit` values to ensure correct pagination. Simulate errors (e.g., invalid authentication token, database connection issues if possible) to verify robust error responses and logging. Check logs for error entries."
           },
           {
@@ -1556,7 +1556,7 @@
               4
             ],
             "details": "Locate the main application navigation component (e.g., `layout.tsx` or a dedicated `Navbar` component). Add a new navigation item with a clear label like 'My Stories' or 'Story List'. Ensure the link correctly points to `/app/stories`. Verify that the navigation item is visible and accessible.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Navigate through the application. Verify that the 'My Stories' link is present in the main navigation. Click the link and confirm that it correctly navigates to the `/app/stories` page and displays the story list. Check that the active state of the navigation link is correctly highlighted when on the stories page."
           },
           {
@@ -1573,7 +1573,7 @@
             "title": "フロントエンド詳細ページの実装",
             "description": "詳細ページコンポーネントを作成し、APIから取得した物語の全文と大きなイラストを表示します。",
             "details": "",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 77
           }
@@ -1582,7 +1582,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T11:26:28.782Z",
+      "updated": "2025-06-29T11:51:22.315Z",
       "description": "Tasks for master context"
     }
   }

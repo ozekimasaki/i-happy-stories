@@ -1,28 +1,44 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '../ui/button';
 import { useAuthStore } from '@/stores/authStore';
-import { Button } from '@/components/ui/button';
 
-const Header = () => {
-  const { isAuthenticated, user, logout } = useAuthStore();
+const Header: React.FC = () => {
+  const { session, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
-    <header className="bg-background border-b">
-      <div className="container mx-auto flex h-16 items-center justify-between">
-        <Link to="/" className="text-xl font-bold">
-          Monogatari Weavers
+    <header className="bg-white shadow-md">
+      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
+        <Link to="/" className="text-2xl font-bold text-gray-800">
+          ものがたりWeavers
         </Link>
-        <nav className="flex items-center gap-4">
-          <Link to="/"><Button variant="ghost">Home</Button></Link>
-          {user ? (
-            <>
-              <Link to="/stories"><Button variant="ghost">My Stories</Button></Link>
-              <Button onClick={logout} variant="outline">Logout</Button>
-            </>
+        <nav>
+          {session ? (
+            <div className="flex items-center gap-4">
+              <Link to="/stories" className="text-gray-600 hover:text-gray-800">
+                マイストーリー
+              </Link>
+              <Link to="/generate-story">
+                <Button>物語を作成</Button>
+              </Link>
+              <Button variant="ghost" onClick={handleLogout}>
+                ログアウト
+              </Button>
+            </div>
           ) : (
-            <>
-              <Link to="/login"><Button variant="ghost">Login</Button></Link>
-              <Link to="/signup"><Button>Sign Up</Button></Link>
-            </>
+            <div className="flex items-center gap-4">
+              <Link to="/login">
+                <Button variant="outline">ログイン</Button>
+              </Link>
+              <Link to="/signup">
+                <Button>サインアップ</Button>
+              </Link>
+            </div>
           )}
         </nav>
       </div>
