@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import StoriesPage from './pages/StoriesPage';
+import StoryGenerationPage from './pages/StoryGenerationPage';
 import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import './style.css'
@@ -17,6 +18,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/stories" element={<StoriesPage />} />
+            <Route path="/generate-story" element={<StoryGenerationPage />} />
           </Route>
         </Route>
       </Routes>
