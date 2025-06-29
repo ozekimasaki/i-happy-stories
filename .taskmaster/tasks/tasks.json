@@ -807,7 +807,7 @@
           54,
           56
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -878,7 +878,62 @@
           63
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Auth API Utility Functions",
+            "description": "Develop reusable utility functions for making POST requests to the authentication endpoints (`/api/auth/login` and `/api/auth/signup`). These functions will encapsulate the API call logic.",
+            "dependencies": [],
+            "details": "Create a new file (e.g., `src/services/authService.ts`) that exports asynchronous functions like `loginUser(credentials: LoginCredentials)` and `signupUser(userData: SignupData)`. These functions should use `fetch` or `axios` to send POST requests, set `Content-Type: application/json` headers, and handle JSON serialization/deserialization. They should return the parsed response data or throw an error on failure.",
+            "status": "done",
+            "testStrategy": "Unit test the utility functions with mock API responses to ensure they correctly format requests and parse successful/error responses."
+          },
+          {
+            "id": 2,
+            "title": "Implement Login Form Submission and Token Storage",
+            "description": "Integrate the `loginUser` API utility function into `LoginPage.tsx` to handle form submission. On successful login, securely store the received JWT in `localStorage` and update the global Zustand authentication store.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `LoginPage.tsx`, add an `onSubmit` handler to the login form. Call the `loginUser` utility function with the form data (username/email and password). If the API call is successful, extract the `accessToken` from the response. Store this token using `localStorage.setItem('accessToken', token)`. Update the Zustand auth store (e.g., `useAuthStore.setState({ isAuthenticated: true, token: token })`). After successful login and state update, redirect the user to a protected route like `/stories` using `useNavigate`.",
+            "status": "pending",
+            "testStrategy": "Manually test login with valid credentials. Verify the token is stored correctly in `localStorage` and the Zustand store. Confirm successful redirection to `/stories`."
+          },
+          {
+            "id": 3,
+            "title": "Implement Signup Form Submission and Redirection",
+            "description": "Integrate the `signupUser` API utility function into `SignupPage.tsx` to handle form submission. On successful signup, redirect the user to the login page.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `SignupPage.tsx`, add an `onSubmit` handler to the signup form. Call the `signupUser` utility function with the form data (username, email, password). If the API call is successful, use `useNavigate` to redirect the user to the `/login` page. No token storage is required here, as the user will log in separately after signing up.",
+            "status": "pending",
+            "testStrategy": "Manually test signup with valid user data. Verify successful redirection to `/login` upon completion."
+          },
+          {
+            "id": 4,
+            "title": "Implement Auth State-Based Route Protection",
+            "description": "Add logic to protect routes and redirect users based on their authentication status. This includes redirecting unauthenticated users from protected routes and authenticated users from authentication pages.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a higher-order component (HOC) or a custom hook (e.g., `useAuthRedirect` or `ProtectedRoute`) that checks the authentication status from the Zustand store and `localStorage`. For protected routes (e.g., `/stories`), if `isAuthenticated` is false, redirect to `/login`. For authentication routes (`/login`, `/signup`), if `isAuthenticated` is true, redirect to `/stories`. Apply this logic to the relevant routes in your routing configuration (e.g., `App.tsx` or a dedicated `Routes.tsx` file).",
+            "status": "pending",
+            "testStrategy": "Test navigating to `/stories` when logged out (should redirect to `/login`). Test navigating to `/login` or `/signup` when already logged in (should redirect to `/stories`)."
+          },
+          {
+            "id": 5,
+            "title": "Implement API Error Handling and User Feedback",
+            "description": "Enhance the login and signup functionalities to gracefully handle API errors (e.g., invalid credentials, network issues) and display appropriate error messages to the user.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Modify the `onSubmit` handlers in `LoginPage.tsx` and `SignupPage.tsx` to include `try-catch` blocks around the API calls. If an error occurs (e.g., `response.ok` is false, or a network error), extract the error message from the API response (if available) or provide a generic error message. Use a state variable (e.g., `errorMessage`) to store the error and display it prominently on the respective page (e.g., below the form or as a toast notification). Clear the error message on subsequent successful attempts or form resets.",
+            "status": "pending",
+            "testStrategy": "Test login with invalid credentials (expect error message). Test signup with existing user data (expect error message). Simulate network errors (e.g., by turning off the backend server) to ensure a generic error message is displayed."
+          }
+        ]
       },
       {
         "id": 65,
@@ -1275,7 +1330,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:53:58.089Z",
+      "updated": "2025-06-29T04:54:51.037Z",
       "description": "Tasks for master context"
     }
   }
