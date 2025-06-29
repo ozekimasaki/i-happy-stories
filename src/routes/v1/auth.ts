@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getSupabase } from '../../lib/supabase';
 
-const auth = new Hono();
+const auth = new Hono<{ Bindings: { SUPABASE_URL: string; SUPABASE_ANON_KEY: string; } }>();
 
 // サインアップエンドポイント
 auth.post('/signup', async (c) => {
@@ -34,6 +34,10 @@ auth.post('/signup', async (c) => {
 
 // ログインエンドポイント
 auth.post('/login', async (c) => {
+  // Debugging: Log environment variables
+  console.log('SUPABASE_URL:', c.env.SUPABASE_URL ? 'Loaded' : 'Not Loaded');
+  console.log('SUPABASE_ANON_KEY:', c.env.SUPABASE_ANON_KEY ? 'Loaded' : 'Not Loaded');
+
   const body = await c.req.json();
   const { email, password } = body;
 
