@@ -848,7 +848,7 @@
               2
             ],
             "details": "Integrate a form library like `react-hook-form` with `zod` for schema validation into `LoginPage.tsx`. Define a schema that marks email and password as required fields. Add basic email format validation. Display validation error messages next to the respective input fields using `shadcn/ui`'s `FormMessage` or similar pattern. The form should prevent submission if validation fails.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Attempt to submit the login form with empty fields, invalid email format, and valid credentials. Verify that appropriate error messages appear for invalid inputs and disappear for valid ones. Ensure the form cannot be submitted when validation errors are present."
           },
           {
@@ -1275,7 +1275,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:52:04.557Z",
+      "updated": "2025-06-29T04:53:32.001Z",
       "description": "Tasks for master context"
     }
   }
