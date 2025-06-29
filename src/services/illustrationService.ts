@@ -37,6 +37,7 @@ export const createIllustration = async (c: Context, storyId: number, prompt: st
         prompt: prompt,
         config: {
             numberOfImages: 1,
+            aspectRatio: '16:9',
         },
     });
 
