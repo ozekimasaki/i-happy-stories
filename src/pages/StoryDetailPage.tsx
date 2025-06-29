@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import type React from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 
@@ -52,8 +53,12 @@ const StoryDetailPage: React.FC = () => {
 
         const data = await response.json() as { story: Story };
         setStory(data.story);
-      } catch (error: any) {
-        toast.error(error.message || '予期せぬエラーが発生しました。');
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error('予期せぬエラーが発生しました。');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -72,6 +77,7 @@ const StoryDetailPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
+            <Link to="/stories" className="text-blue-500 hover:underline mb-4 inline-block">&larr; 物語一覧へ戻る</Link>
       <h1 className="text-3xl font-bold mb-2">{story.title}</h1>
       <p className="text-sm text-gray-500 mb-4">
         作成日時: {new Date(story.created_at).toLocaleString()}
