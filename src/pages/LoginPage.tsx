@@ -8,6 +8,7 @@ import { loginUser } from "@/services/authService"
 import { useAuthStore } from "@/stores/authStore"
 import { useEffect } from "react"
 import { toast } from "sonner"
+import type { Session } from "@supabase/supabase-js"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -63,8 +64,12 @@ const LoginPage = () => {
       } else {
         toast.error("Login failed: No session received.");
       }
-    } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred.");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
     }
   }
 
