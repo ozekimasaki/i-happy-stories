@@ -896,7 +896,7 @@
               1
             ],
             "details": "In `LoginPage.tsx`, add an `onSubmit` handler to the login form. Call the `loginUser` utility function with the form data (username/email and password). If the API call is successful, extract the `accessToken` from the response. Store this token using `localStorage.setItem('accessToken', token)`. Update the Zustand auth store (e.g., `useAuthStore.setState({ isAuthenticated: true, token: token })`). After successful login and state update, redirect the user to a protected route like `/stories` using `useNavigate`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually test login with valid credentials. Verify the token is stored correctly in `localStorage` and the Zustand store. Confirm successful redirection to `/stories`."
           },
           {
@@ -1330,7 +1330,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:54:51.037Z",
+      "updated": "2025-06-29T04:57:10.444Z",
       "description": "Tasks for master context"
     }
   }

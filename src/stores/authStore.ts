@@ -3,9 +3,10 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User } from '@supabase/supabase-js';
 
 interface AuthState {
+  isAuthenticated: boolean;
   user: User | null;
   token: string | null;
-  login: (userData: User, authToken: string) => void;
+  login: (userData: User, token: string) => void;
   logout: () => void;
   setToken: (authToken: string) => void;
 }
@@ -13,10 +14,11 @@ interface AuthState {
 const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
+      isAuthenticated: false,
       user: null,
       token: null,
-      login: (userData, authToken) => set({ user: userData, token: authToken }),
-      logout: () => set({ user: null, token: null }),
+      login: (userData, token) => set({ isAuthenticated: true, user: userData, token }),
+      logout: () => set({ isAuthenticated: false, user: null, token: null }),
       setToken: (authToken) => set({ token: authToken }),
     }),
     {
