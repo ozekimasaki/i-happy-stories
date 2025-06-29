@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useNavigate } from "react-router-dom"
 import { signupUser } from "@/services/authService"
+import { useAuthStore } from "@/stores/authStore"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -46,11 +48,11 @@ const SignupPage = () => {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       await signupUser(values);
-      alert('Signup successful! Please login.');
+      toast.success('Signup successful! Please login.');
       navigate('/login');
     } catch (error) {
       console.error(error);
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   }
 

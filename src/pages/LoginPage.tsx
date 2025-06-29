@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom"
 import { loginUser } from "@/services/authService"
 import { useAuthStore } from "@/stores/authStore"
 import { useEffect } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -61,9 +62,8 @@ const LoginPage = () => {
       localStorage.setItem('accessToken', data.token);
       navigate('/stories');
     } catch (error) {
-      // Basic error handling, will be improved in a later task
       console.error(error);
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   }
 
