@@ -368,8 +368,62 @@
         "dependencies": [
           46
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install Zustand and Create Initial Auth Store File",
+            "description": "Install the `zustand` package and create the foundational file for the authentication store.",
+            "dependencies": [],
+            "details": "Run `npm install zustand` or `yarn add zustand`. Create `src/lib/stores/authStore.ts` (or `src/stores/authStore.ts` based on project structure). Export a basic `create` function from `zustand` to initialize an empty store.",
+            "status": "done",
+            "testStrategy": "Verify `zustand` is listed in `package.json`. Confirm `authStore.ts` file exists in the specified path."
+          },
+          {
+            "id": 2,
+            "title": "Define Authentication State and Actions",
+            "description": "Define the core state variables (`user`, `token`) and the `login`, `logout`, `setToken` actions within the `authStore`.",
+            "dependencies": [
+              1
+            ],
+            "details": "Inside `src/lib/stores/authStore.ts`, use `create` to define the initial state: `user: null`, `token: null`. Implement actions: `login(user, token)` (sets `user` and `token`), `logout()` (resets `user` and `token` to `null`), `setToken(token)` (updates only the `token`). Ensure actions correctly use `set` to update the state.",
+            "status": "done",
+            "testStrategy": "Write simple unit tests for `authStore.ts` to verify state changes after calling `login`, `logout`, and `setToken` actions. Assert that the state reflects the expected values."
+          },
+          {
+            "id": 3,
+            "title": "Implement Token Persistence with LocalStorage",
+            "description": "Enhance the `authStore` to persist the authentication token in `localStorage` and retrieve it upon store initialization.",
+            "dependencies": [
+              2
+            ],
+            "details": "Modify `authStore.ts`: When `login` or `setToken` is called, save the token to `localStorage` (e.g., `localStorage.setItem('authToken', token)`). When `logout` is called, remove the token from `localStorage` (`localStorage.removeItem('authToken')`). Initialize the store's `token` state by attempting to read from `localStorage` first (e.g., `token: typeof window !== 'undefined' ? localStorage.getItem('authToken') : null`).",
+            "status": "done",
+            "testStrategy": "Manually test by logging in, closing/reopening the browser tab, and verifying the user remains logged in. Inspect `localStorage` in browser developer tools to confirm token presence/absence."
+          },
+          {
+            "id": 4,
+            "title": "Integrate and Consume Auth Store in a Component",
+            "description": "Demonstrate the usage of the `authStore` by integrating it into a sample React component to display authentication status and trigger actions.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a simple component (e.g., `AuthStatus.tsx` or modify an existing `App.tsx`): Import `useAuthStore` from `authStore.ts`. Use `const { user, token, login, logout } = useAuthStore();` to access state and actions. Display `user.name` or 'Guest' based on `user` state. Add buttons to call `login` (with dummy data like `{ name: 'Test User' }` and a dummy token) and `logout` actions.",
+            "status": "done",
+            "testStrategy": "Manually test the component: click login/logout buttons and observe the UI changes (e.g., user name displayed/hidden) and verify `localStorage` updates accordingly."
+          },
+          {
+            "id": 5,
+            "title": "Add Basic Type Safety and Refinements",
+            "description": "Enhance the `authStore` with basic TypeScript type definitions for the state and actions to improve code robustness and maintainability.",
+            "dependencies": [
+              4
+            ],
+            "details": "Define TypeScript interfaces for the `User` object (e.g., `interface User { id: string; name: string; email: string; }`) and the `AuthStore` state/actions (e.g., `interface AuthState { user: User | null; token: string | null; login: (user: User, token: string) => void; logout: () => void; setToken: (token: string) => void; }`). Apply these types to the `create` function and its arguments/return values in `authStore.ts`.",
+            "status": "done",
+            "testStrategy": "Verify that TypeScript compilation passes without errors. Attempt to pass incorrect types to `login` or `setToken` actions in the consuming component to ensure TypeScript catches the type mismatches during development."
+          }
+        ]
       },
       {
         "id": 56,
@@ -1111,7 +1165,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:27:55.328Z",
+      "updated": "2025-06-29T04:38:27.336Z",
       "description": "Tasks for master context"
     }
   }
