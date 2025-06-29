@@ -907,7 +907,7 @@
               1
             ],
             "details": "In `SignupPage.tsx`, add an `onSubmit` handler to the signup form. Call the `signupUser` utility function with the form data (username, email, password). If the API call is successful, use `useNavigate` to redirect the user to the `/login` page. No token storage is required here, as the user will log in separately after signing up.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually test signup with valid user data. Verify successful redirection to `/login` upon completion."
           },
           {
@@ -1330,7 +1330,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:57:10.444Z",
+      "updated": "2025-06-29T04:57:34.257Z",
       "description": "Tasks for master context"
     }
   }

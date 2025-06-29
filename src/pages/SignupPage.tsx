@@ -3,6 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { useNavigate } from "react-router-dom"
+import { signupUser } from "@/services/authService"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +34,7 @@ const formSchema = z.object({
 })
 
 const SignupPage = () => {
+  const navigate = useNavigate();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,8 +43,15 @@ const SignupPage = () => {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await signupUser(values);
+      alert('Signup successful! Please login.');
+      navigate('/login');
+    } catch (error) {
+      console.error(error);
+      alert((error as Error).message);
+    }
   }
 
   return (
