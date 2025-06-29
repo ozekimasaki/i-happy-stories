@@ -6,6 +6,7 @@ import * as z from "zod"
 import { useNavigate } from "react-router-dom"
 import { loginUser } from "@/services/authService"
 import { useAuthStore } from "@/stores/authStore"
+import { useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -37,7 +38,14 @@ const formSchema = z.object({
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { login, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/stories', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

@@ -918,7 +918,7 @@
               2
             ],
             "details": "Create a higher-order component (HOC) or a custom hook (e.g., `useAuthRedirect` or `ProtectedRoute`) that checks the authentication status from the Zustand store and `localStorage`. For protected routes (e.g., `/stories`), if `isAuthenticated` is false, redirect to `/login`. For authentication routes (`/login`, `/signup`), if `isAuthenticated` is true, redirect to `/stories`. Apply this logic to the relevant routes in your routing configuration (e.g., `App.tsx` or a dedicated `Routes.tsx` file).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test navigating to `/stories` when logged out (should redirect to `/login`). Test navigating to `/login` or `/signup` when already logged in (should redirect to `/stories`)."
           },
           {
@@ -1330,7 +1330,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:57:34.257Z",
+      "updated": "2025-06-29T04:58:32.333Z",
       "description": "Tasks for master context"
     }
   }

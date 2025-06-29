@@ -4,16 +4,21 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import StoriesPage from './pages/StoriesPage';
 import MainLayout from './components/layout/MainLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 import './style.css'
 
 function App() {
   return (
     <MainLayout>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/stories" element={<StoriesPage />} />
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/stories" element={<StoriesPage />} />
+          </Route>
+        </Route>
       </Routes>
     </MainLayout>
   )
