@@ -10,15 +10,15 @@ const posts = new Hono();
 posts.get('/', authMiddleware, async (c) => {
   const user = c.get('user');
   if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401);
+    return c.json({ error: '認証が必要です' }, 401);
   }
 
   try {
     const stories = await getStoriesByUserId(c, user.id);
-    return c.json({ stories: stories, message: 'Successfully fetched stories' });
+    return c.json({ stories: stories, message: '物語一覧を取得しました' });
   } catch (error) {
     console.error('Error fetching stories:', error);
-    return c.json({ error: 'Failed to fetch stories' }, 500);
+    return c.json({ error: '物語一覧の取得に失敗しました' }, 500);
   }
 });
 
@@ -28,21 +28,21 @@ posts.get('/:id', authMiddleware, async (c) => {
   const id = parseInt(c.req.param('id'), 10);
 
   if (!user) {
-    return c.json({ error: 'Unauthorized' }, 401);
+    return c.json({ error: '認証が必要です' }, 401);
   }
-  if (isNaN(id)) {
-    return c.json({ error: 'Invalid ID format' }, 400);
+  if (Number.isNaN(id)) {
+    return c.json({ error: 'IDの形式が正しくありません' }, 400);
   }
 
   try {
     const story = await getStoryById(c, id, user.id);
     if (!story) {
-      return c.json({ error: 'Story not found' }, 404);
+      return c.json({ error: '物語が見つかりません' }, 404);
     }
-    return c.json({ story: story, message: `Successfully fetched story ${id}` });
+    return c.json({ story: story, message: `物語(ID:${id})を取得しました` });
   } catch (error) {
     console.error(`Error fetching story ${id}:`, error);
-    return c.json({ error: 'Failed to fetch story' }, 500);
+    return c.json({ error: '物語の取得に失敗しました' }, 500);
   }
 });
 
@@ -75,28 +75,28 @@ posts.post('/', authMiddleware, async (c) => {
     }
 
     return c.json({ 
-      message: 'Story and illustration prompt created successfully. Illustration generation may vary.', 
+      message: '物語とイラストのプロンプトを作成しました。イラストの生成には時間がかかる場合があります。', 
       story: story,
       illustration: illustration
     }, 201);
 
   } catch (error) {
     console.error('Error in post creation endpoint:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    return c.json({ error: `Failed to create story or illustration: ${errorMessage}` }, 500);
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+    return c.json({ error: `物語またはイラストの作成に失敗しました: ${errorMessage}` }, 500);
   }
 });
 
 // 投稿を更新
 posts.put('/:id', (c) => {
     const { id } = c.req.param();
-    return c.json({ message: `Update post ${id}` });
+    return c.json({ message: `投稿(ID:${id})を更新しました` });
 });
 
 // 投稿を削除
 posts.delete('/:id', (c) => {
     const { id } = c.req.param();
-    return c.json({ message: `Delete post ${id}` });
+    return c.json({ message: `投稿(ID:${id})を削除しました` });
 });
 
 export default posts;

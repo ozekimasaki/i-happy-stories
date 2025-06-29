@@ -10,7 +10,7 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
     const user = c.get('user');
 
     if (!user) {
-      throw new Error('User not found.');
+      throw new Error('ユーザーが見つかりません。');
     }
 
     console.log(`Generating story for user input: "${userInput}"`);
@@ -64,14 +64,14 @@ ${userInput}
 
     const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!responseText) {
-      throw new Error('No content generated or unexpected response structure.');
+      throw new Error('AIからの応答が空か、予期しない形式です。');
     }
 
     const generatedContent = JSON.parse(responseText);
     const { story_text, illustration_prompt } = generatedContent;
 
     if (!story_text || !illustration_prompt) {
-        throw new Error('Generated JSON is missing required keys: story_text or illustration_prompt.');
+        throw new Error('AIが生成したJSONに必要なキー（story_textまたはillustration_prompt）が含まれていません。');
     }
 
     const lines = story_text.trim().split('\\n');
@@ -90,7 +90,7 @@ ${userInput}
 
     if (error) {
       console.error('Error saving story to Supabase:', error);
-      throw new Error('Failed to save story to database.');
+      throw new Error('物語をデータベースに保存できませんでした。');
     }
 
     return { story: data as Story, illustrationPrompt: illustration_prompt };
@@ -100,7 +100,7 @@ ${userInput}
     if (error instanceof Error) {
         throw error;
     }
-    throw new Error('An unknown error occurred while creating the story.');
+    throw new Error('物語の作成中に不明なエラーが発生しました。');
   }
 };
 
@@ -124,7 +124,7 @@ export const getStoriesByUserId = async (c: Context, userId: string) => {
 
   if (error) {
     console.error('Error fetching stories from Supabase:', error);
-    throw new Error(`Failed to fetch stories: ${error.message}`);
+    throw new Error(`物語一覧の取得に失敗しました: ${error.message}`);
   }
 
   return data;
@@ -151,7 +151,7 @@ export const getStoryById = async (c: Context, storyId: number, userId:string) =
 
   if (error) {
     console.error(`Error fetching story ${storyId} from Supabase:`, error);
-    throw new Error(`Failed to fetch story: ${error.message}`);
+    throw new Error(`物語の取得に失敗しました: ${error.message}`);
   }
 
   return data;

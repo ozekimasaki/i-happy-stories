@@ -9,7 +9,7 @@ auth.post('/signup', async (c) => {
   const { email, password } = body;
 
   if (!email || !password) {
-    return c.json({ error: 'Email and password are required' }, 400);
+    return c.json({ error: 'メールアドレスとパスワードは必須です' }, 400);
   }
 
   const supabase = getSupabase(c);
@@ -20,7 +20,7 @@ auth.post('/signup', async (c) => {
 
   if (error) {
     if (error.message.includes('User already registered')) {
-      return c.json({ error: 'User already exists' }, 409);
+      return c.json({ error: 'このメールアドレスは既に登録されています' }, 409);
     }
     return c.json({ error: error.message }, 500);
   }
@@ -28,21 +28,17 @@ auth.post('/signup', async (c) => {
   if (data.session) {
     return c.json({ user: data.user, session: data.session });
   } else {
-    return c.json({ message: 'Confirmation email sent. Please verify your email.', user: data.user });
+    return c.json({ message: '確認メールを送信しました。メールをご確認ください。', user: data.user });
   }
 });
 
 // ログインエンドポイント
 auth.post('/login', async (c) => {
-  // Debugging: Log environment variables
-  console.log('SUPABASE_URL:', c.env.SUPABASE_URL ? 'Loaded' : 'Not Loaded');
-  console.log('SUPABASE_ANON_KEY:', c.env.SUPABASE_ANON_KEY ? 'Loaded' : 'Not Loaded');
-
   const body = await c.req.json();
   const { email, password } = body;
 
   if (!email || !password) {
-    return c.json({ error: 'Email and password are required' }, 400);
+    return c.json({ error: 'メールアドレスとパスワードは必須です' }, 400);
   }
 
   const supabase = getSupabase(c);
@@ -53,7 +49,7 @@ auth.post('/login', async (c) => {
 
   if (error) {
     if (error.message === 'Invalid login credentials') {
-      return c.json({ error: 'Invalid email or password' }, 401);
+      return c.json({ error: 'メールアドレスまたはパスワードが正しくありません' }, 401);
     }
     return c.json({ error: error.message }, 500);
   }
