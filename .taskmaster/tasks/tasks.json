@@ -1492,11 +1492,97 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": 77,
+        "title": "Implement Story List Feature",
+        "description": "Implement a backend API endpoint to retrieve a list of user-generated stories and create a new frontend page to display these stories, including a navigation link.",
+        "details": "Backend (Hono): Create a new GET endpoint (e.g., /api/stories) to fetch stories. Implement logic to query Supabase for stories, ensuring proper authentication to filter by user_id. Consider adding pagination parameters for future scalability. Return a JSON array of story objects, including relevant metadata like id, title, creation date, and a snippet or illustration URL. Integrate robust error handling and logging as per Task 75. Frontend (Next.js/React): Create a new page component (e.g., /app/stories/page.tsx) responsible for fetching and displaying the list of stories. Utilize UI components (e.g., shadcn/ui Card or Table) to present the stories in an organized manner. Implement loading states and display user-friendly error messages using the Toast component from Task 75. Add a prominent link to this new 'My Stories' or 'Story List' page in the main application navigation.",
+        "testStrategy": "Backend: Use a tool like Postman or curl to directly call the new API endpoint. Verify that it returns a list of stories for an authenticated user and an empty array for a user with no stories. Test with an unauthenticated request to ensure proper authorization handling (e.g., 401 Unauthorized). Frontend: Navigate to the new 'My Stories' page via the navigation link. Verify that the page loads correctly and displays the list of stories with accurate titles and details. Confirm that loading indicators are shown during data fetching. Simulate API errors (e.g., by temporarily modifying the backend response) to ensure appropriate error messages are displayed on the frontend. Verify the navigation link is correctly integrated and functional.",
+        "status": "pending",
+        "dependencies": [
+          72,
+          75
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Core Backend API for Story Retrieval",
+            "description": "Create the initial Hono GET endpoint `/api/stories` to fetch user-generated stories from Supabase. This subtask focuses on the core data retrieval and user authentication.",
+            "dependencies": [],
+            "details": "Create a new route in Hono (e.g., `src/api/stories.ts` or similar). Implement logic to query the `stories` table in Supabase. Ensure the query filters stories by `user_id` based on the authenticated user's ID. Return a JSON array of story objects including `id`, `title`, `created_at`, and a `snippet` or `illustration_url`. For now, do not implement pagination or advanced error handling beyond basic success/failure.",
+            "status": "done",
+            "testStrategy": "Use a tool like Postman or Insomnia, or write a simple `curl` command, to test the `/api/stories` endpoint. Verify that it returns stories for an authenticated user and no stories for an unauthenticated user or a user with no stories. Check the structure of the returned JSON."
+          },
+          {
+            "id": 2,
+            "title": "Enhance Backend API with Pagination and Robust Error Handling",
+            "description": "Extend the `/api/stories` endpoint to support pagination parameters and integrate robust error handling and logging as per Task 75.",
+            "dependencies": [
+              1
+            ],
+            "details": "Modify the `/api/stories` endpoint to accept optional query parameters like `offset` and `limit` (e.g., `?offset=0&limit=10`). Implement the Supabase query to apply these pagination parameters. Integrate error handling for database query failures, authentication issues, or invalid parameters, returning appropriate HTTP status codes and error messages. Ensure logging is implemented for critical errors as per Task 75 guidelines.",
+            "status": "pending",
+            "testStrategy": "Test the `/api/stories` endpoint with various `offset` and `limit` values to ensure correct pagination. Simulate errors (e.g., invalid authentication token, database connection issues if possible) to verify robust error responses and logging. Check logs for error entries."
+          },
+          {
+            "id": 3,
+            "title": "Create Frontend Story List Page and Data Fetching Logic",
+            "description": "Develop the new Next.js page component (`/app/stories/page.tsx`) responsible for fetching the list of stories from the backend API, including handling loading and initial error states.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create the file `app/stories/page.tsx`. Implement data fetching logic within this component (e.g., using `useEffect` with `fetch` or a data fetching library). Call the `/api/stories` endpoint. Implement a loading state (e.g., displaying a spinner or skeleton UI) while data is being fetched. Implement basic error handling to display user-friendly error messages using the Toast component from Task 75 if the API call fails.",
+            "status": "done",
+            "testStrategy": "Navigate directly to `/app/stories` in the browser. Verify that a loading state is displayed initially. Ensure that stories are fetched and available in the component's state. Simulate an API error (e.g., by temporarily disabling the backend or modifying the endpoint URL) to confirm that the error Toast message appears correctly."
+          },
+          {
+            "id": 4,
+            "title": "Implement Frontend Story List UI Display",
+            "description": "Utilize UI components (e.g., shadcn/ui Card or Table) to present the fetched stories in an organized and user-friendly manner on the `/app/stories` page.",
+            "dependencies": [
+              3
+            ],
+            "details": "Using the data fetched in the previous subtask, render the list of stories. Choose appropriate shadcn/ui components like `Card` for individual stories or `Table` for a tabular display. Each story should display its `title`, `created_at`, and a `snippet` or `illustration_url` if available. Ensure the layout is responsive and visually appealing.",
+            "status": "done",
+            "testStrategy": "Verify that the fetched stories are correctly rendered on the page using the chosen UI components. Check that all relevant story metadata (title, date, snippet/image) is displayed. Test responsiveness on different screen sizes. Ensure the UI handles cases with no stories gracefully (e.g., displaying a 'No stories yet' message)."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Story List Page into Application Navigation",
+            "description": "Add a prominent navigation link to the new 'My Stories' or 'Story List' page in the main application navigation.",
+            "dependencies": [
+              4
+            ],
+            "details": "Locate the main application navigation component (e.g., `layout.tsx` or a dedicated `Navbar` component). Add a new navigation item with a clear label like 'My Stories' or 'Story List'. Ensure the link correctly points to `/app/stories`. Verify that the navigation item is visible and accessible.",
+            "status": "pending",
+            "testStrategy": "Navigate through the application. Verify that the 'My Stories' link is present in the main navigation. Click the link and confirm that it correctly navigates to the `/app/stories` page and displays the story list. Check that the active state of the navigation link is correctly highlighted when on the stories page."
+          },
+          {
+            "id": 6,
+            "title": "バックエンドAPIの作成（詳細取得）",
+            "description": "特定のIDの物語を取得するAPIエンドポイント（例: GET /api/v1/posts/:id）を作成します。",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 77
+          },
+          {
+            "id": 7,
+            "title": "フロントエンド詳細ページの実装",
+            "description": "詳細ページコンポーネントを作成し、APIから取得した物語の全文と大きなイラストを表示します。",
+            "details": "",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 77
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T09:59:06.882Z",
+      "updated": "2025-06-29T11:26:28.782Z",
       "description": "Tasks for master context"
     }
   }

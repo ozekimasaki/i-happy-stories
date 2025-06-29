@@ -56,4 +56,57 @@ export const createStory = async (c: Context, prompt: string): Promise<Story> =>
     }
     throw new Error('An unknown error occurred while creating the story.');
   }
+};
+
+export const getStoriesByUserId = async (c: Context, userId: string) => {
+  const supabase = getSupabase(c);
+  const { data, error } = await supabase
+    .from('stories')
+    .select(`
+      id,
+      title,
+      content,
+      created_at,
+      illustrations (
+        id,
+        image_url,
+        prompt
+      )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching stories from Supabase:', error);
+    throw new Error(`Failed to fetch stories: ${error.message}`);
+  }
+
+  return data;
+};
+
+export const getStoryById = async (c: Context, storyId: number, userId: string) => {
+  const supabase = getSupabase(c);
+  const { data, error } = await supabase
+    .from('stories')
+    .select(`
+      id,
+      title,
+      content,
+      created_at,
+      illustrations (
+        id,
+        image_url,
+        prompt
+      )
+    `)
+    .eq('id', storyId)
+    .eq('user_id', userId)
+    .single();
+
+  if (error) {
+    console.error(`Error fetching story ${storyId} from Supabase:`, error);
+    throw new Error(`Failed to fetch story: ${error.message}`);
+  }
+
+  return data;
 }; 

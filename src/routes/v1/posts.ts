@@ -1,18 +1,49 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../../middleware/auth';
-import { createStory } from '../../services/storyService';
+import { createStory, getStoriesByUserId, getStoryById } from '../../services/storyService';
 import { createIllustration } from '../../services/illustrationService';
 import { storyRequestSchema } from '../../schemas/storySchema';
 
 const posts = new Hono();
 
 // 投稿一覧を取得
-posts.get('/', (c) => c.json({ posts: [], message: 'Get all posts' }));
+posts.get('/', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const stories = await getStoriesByUserId(c, user.id);
+    return c.json({ stories: stories, message: 'Successfully fetched stories' });
+  } catch (error) {
+    console.error('Error fetching stories:', error);
+    return c.json({ error: 'Failed to fetch stories' }, 500);
+  }
+});
 
 // 特定の投稿を取得
-posts.get('/:id', (c) => {
-  const { id } = c.req.param();
-  return c.json({ post: { id }, message: `Get post ${id}` });
+posts.get('/:id', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const id = parseInt(c.req.param('id'), 10);
+
+  if (!user) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  if (isNaN(id)) {
+    return c.json({ error: 'Invalid ID format' }, 400);
+  }
+
+  try {
+    const story = await getStoryById(c, id, user.id);
+    if (!story) {
+      return c.json({ error: 'Story not found' }, 404);
+    }
+    return c.json({ story: story, message: `Successfully fetched story ${id}` });
+  } catch (error) {
+    console.error(`Error fetching story ${id}:`, error);
+    return c.json({ error: 'Failed to fetch story' }, 500);
+  }
 });
 
 // 新しい投稿を作成 (認証が必要)
