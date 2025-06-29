@@ -1418,8 +1418,63 @@
           71,
           72
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Backend: Implement Centralized Error Handling Middleware (Hono)",
+            "description": "Create and integrate a Hono middleware to catch unhandled errors globally, ensuring all backend errors are intercepted before sending a response. This will standardize error responses.",
+            "dependencies": [],
+            "details": "Implement an `app.onError` handler or a custom middleware function in Hono. This handler should capture `Error` objects, extract relevant details (e.g., `error.message`, `error.stack`), and construct a standardized JSON error response (e.g., `{ status: 500, message: 'Internal Server Error', code: 'SERVER_ERROR' }`). Ensure it handles different types of errors gracefully.",
+            "status": "done",
+            "testStrategy": "Introduce intentional errors (e.g., `throw new Error('Test error')` in a route handler, access a non-existent variable) and verify that the standardized error response is returned by the API."
+          },
+          {
+            "id": 2,
+            "title": "Backend: Integrate Logging Service for Errors",
+            "description": "Enhance the centralized error handler to log caught errors to a designated logging service (e.g., console for development, Cloudflare Logpush for production) with relevant context.",
+            "dependencies": [
+              1
+            ],
+            "details": "Within the Hono error middleware implemented in Subtask 1, add logic to send detailed error information to `console.error` or a dedicated logging utility. Include context such as request details (method, path, headers), timestamp, stack trace, and any available user information. For production, consider integrating with Cloudflare Logpush or a similar service.",
+            "status": "done",
+            "testStrategy": "Trigger various backend errors (e.g., invalid input, database connection issues, unhandled exceptions) and verify that detailed error logs appear in the console or the configured logging service, including stack traces and request context."
+          },
+          {
+            "id": 3,
+            "title": "Frontend: Implement `try-catch` for API Calls",
+            "description": "Modify existing or future API call functions/wrappers to include `try-catch` blocks, ensuring that network and application-level errors from the backend are caught gracefully.",
+            "dependencies": [],
+            "details": "Identify common patterns for making API calls (e.g., using `fetch` directly or a custom wrapper). Wrap these calls in `try-catch` blocks. In the `catch` block, extract error information (e.g., `error.message`, `error.response.status`, or parsed JSON error body from backend). Centralize this error handling logic if possible (e.g., in a custom `fetch` wrapper).",
+            "status": "done",
+            "testStrategy": "Simulate API failures (e.g., by temporarily making a backend endpoint return a 500 error or by blocking network requests in browser dev tools) and verify that the `catch` block is executed and the error object contains relevant information."
+          },
+          {
+            "id": 4,
+            "title": "Frontend: Display User-Friendly Error Toasts (shadcn/ui)",
+            "description": "Integrate `shadcn/ui` `Toast` components to display user-friendly error messages to the user when API calls or other frontend operations fail.",
+            "dependencies": [
+              3
+            ],
+            "details": "Utilize the `useToast` hook from `shadcn/ui`. In the `catch` blocks implemented in Subtask 3, call `toast({ variant: 'destructive', title: 'Error', description: 'A user-friendly message explaining the issue' })`. Map specific backend error codes or messages to more generic, user-facing descriptions to avoid exposing technical details. Ensure toasts are dismissible and provide clear feedback.",
+            "status": "done",
+            "testStrategy": "Trigger frontend API call failures (e.g., by making a backend endpoint return a 400 or 500 error). Verify that a `shadcn/ui` Toast component appears on the screen with an appropriate, user-friendly error message."
+          },
+          {
+            "id": 5,
+            "title": "Comprehensive Error Handling Testing & Documentation",
+            "description": "Conduct end-to-end testing of the implemented error handling and logging mechanisms across various scenarios and document the setup for future maintenance and debugging.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Perform a thorough testing phase covering: 1. Backend: Verify logs for different error types (validation, runtime, network) and standardized responses. 2. Frontend: Test various API failure scenarios (4xx, 5xx, network offline) and confirm correct toast display. 3. End-to-end: Ensure frontend errors are logged on the backend if applicable. Document the error handling strategy, common error codes, how to interpret logs, and guidelines for adding new error types in the project's README or a dedicated `CONTRIBUTING.md`.",
+            "status": "done",
+            "testStrategy": "Create a test plan covering specific error scenarios for both frontend and backend. For each scenario, verify the expected user experience (toast message) and the backend logging output. Document the observed behavior and confirm it matches the desired robust error handling."
+          }
+        ]
       },
       {
         "id": 76,
@@ -1441,7 +1496,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T07:59:50.020Z",
+      "updated": "2025-06-29T09:59:06.882Z",
       "description": "Tasks for master context"
     }
   }

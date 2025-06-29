@@ -4,22 +4,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
+import { toast } from "sonner";
 
 const StoryGenerationPage: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [story, setStory] = useState<{ story: string; imageUrl: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { session } = useAuthStore();
 
   const handleSubmit = async () => {
     if (!session) {
-      setError('ログインしていません。');
+      toast.error('ログインしていません。');
       return;
     }
 
     setIsLoading(true);
-    setError(null);
     setStory(null);
 
     try {
@@ -43,7 +42,7 @@ const StoryGenerationPage: React.FC = () => {
         imageUrl: data.illustration?.image_url || '',
       });
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || '予期せぬエラーが発生しました。');
     } finally {
       setIsLoading(false);
     }
@@ -67,17 +66,6 @@ const StoryGenerationPage: React.FC = () => {
           {isLoading ? '生成中...' : '物語を生成する'}
         </Button>
       </div>
-
-      {error && (
-        <Card className="mt-4 bg-destructive/10 border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">エラー</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{error}</p>
-          </CardContent>
-        </Card>
-      )}
 
       {isLoading && (
         <div className="mt-4 text-center">
