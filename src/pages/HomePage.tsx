@@ -22,7 +22,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Home Page</h1>
-      {user ? (
+      {user && user.user_metadata ? (
         <div>
           <p>Welcome, {user.user_metadata.name}!</p>
           <Button onClick={logout} variant="destructive" className="mt-2">Logout</Button>

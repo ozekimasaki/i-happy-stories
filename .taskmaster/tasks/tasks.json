@@ -436,8 +436,63 @@
           53,
           54
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Establish Layout Component Directory",
+            "description": "Create the necessary directory structure for layout components within `src/components` to ensure a clean and organized codebase.",
+            "dependencies": [],
+            "details": "Create the directory `src/components/layout`. This will house `Header.tsx`, `Footer.tsx`, and `MainLayout.tsx`.",
+            "status": "done",
+            "testStrategy": "Verify the directory `src/components/layout` exists in the project structure."
+          },
+          {
+            "id": 2,
+            "title": "Develop Header Component",
+            "description": "Implement the `Header` component, including a basic application title/logo and placeholder navigation links, utilizing `shadcn/ui` components for styling and functionality.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create `src/components/layout/Header.tsx`. Use a semantic `<header>` tag. Incorporate `shadcn/ui` components like `Button` for navigation items (e.g., Home, About, Contact) and a simple `div` or `h1` for the application title. Ensure basic styling for alignment and spacing.",
+            "status": "done",
+            "testStrategy": "Render `Header` in isolation (e.g., in Storybook or a temporary test page) and visually confirm title and navigation links are present and styled correctly."
+          },
+          {
+            "id": 3,
+            "title": "Develop Footer Component",
+            "description": "Implement the `Footer` component, including copyright information and potentially placeholder links, leveraging `shadcn/ui` components where appropriate.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create `src/components/layout/Footer.tsx`. Use a semantic `<footer>` tag. Include copyright text (e.g., '© 2023 Your App Name'). Optionally, add placeholder links using `shadcn/ui` `Button` or simple `<a>` tags. Ensure basic styling for alignment and spacing.",
+            "status": "done",
+            "testStrategy": "Render `Footer` in isolation and visually confirm copyright information and any placeholder links are present and styled correctly."
+          },
+          {
+            "id": 4,
+            "title": "Develop MainLayout Wrapper Component",
+            "description": "Create the `MainLayout` component that acts as a central wrapper, integrating the `Header` and `Footer` components and providing a designated area for main content via its children prop.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create `src/components/layout/MainLayout.tsx`. This component should accept `children` as a React prop. It will render the `Header` component, followed by a `main` HTML element containing `{children}`, and finally the `Footer` component. Apply basic flexbox or grid styling to ensure the header, main content, and footer are vertically stacked.",
+            "status": "done",
+            "testStrategy": "Create a temporary test page that uses `MainLayout` and passes some dummy content as children. Verify that the Header, dummy content, and Footer are all rendered in the correct order."
+          },
+          {
+            "id": 5,
+            "title": "Integrate MainLayout into Application Entry Point",
+            "description": "Modify the main application entry point (e.g., `App.tsx` or `main.tsx`'s root component) to utilize the `MainLayout` component, thereby applying the consistent UI structure across the entire application.",
+            "dependencies": [
+              4
+            ],
+            "details": "Locate the primary application component (e.g., `App.tsx` or the component rendered by `ReactDOM.createRoot` in `main.tsx`). Import `MainLayout` and wrap the existing application content (e.g., your `Router` or main application routes) with the `MainLayout` component.",
+            "status": "done",
+            "testStrategy": "Run the application and visually inspect the main page. Confirm that the Header and Footer are consistently displayed at the top and bottom, respectively, and that the main application content renders correctly in between."
+          }
+        ]
       },
       {
         "id": 57,
@@ -1165,7 +1220,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:38:27.336Z",
+      "updated": "2025-06-29T04:47:28.263Z",
       "description": "Tasks for master context"
     }
   }
