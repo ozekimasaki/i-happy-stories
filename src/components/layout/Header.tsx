@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import useAuthStore from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 
 const Header = () => {
-  const { user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   return (
     <header className="bg-background border-b">

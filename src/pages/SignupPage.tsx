@@ -46,12 +46,15 @@ const SignupPage = () => {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("onSubmit called with values:", values);
     try {
+      console.log("Attempting to sign up...");
       await signupUser(values);
+      console.log("Signup successful.");
       toast.success('Signup successful! Please login.');
       navigate('/login');
     } catch (error) {
-      console.error(error);
+      console.error("Signup failed:", error);
       toast.error((error as Error).message);
     }
   }

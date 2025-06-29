@@ -11,7 +11,7 @@ interface AuthState {
   setToken: (authToken: string) => void;
 }
 
-const useAuthStore = create<AuthState>()(
+export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       isAuthenticated: false,
@@ -26,6 +26,4 @@ const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
     }
   )
-);
-
-export default useAuthStore; 
+); 

@@ -1,5 +1,5 @@
 export const signupUser = async (credentials: any) => {
-  const response = await fetch('/api/auth/signup', {
+  const response = await fetch('/api/v1/auth/signup', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -16,7 +16,7 @@ export const signupUser = async (credentials: any) => {
 };
 
 export const loginUser = async (credentials: any) => {
-  const response = await fetch('/api/auth/login', {
+  const response = await fetch('/api/v1/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

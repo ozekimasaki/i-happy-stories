@@ -877,7 +877,7 @@
           62,
           63
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1028,7 +1028,62 @@
           64
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create StoryGenerationPage and Configure Routing",
+            "description": "Create the `src/pages/StoryGenerationPage.tsx` file and set up the necessary routing configuration to make this page accessible within the application, for example, at `/generate-story`.",
+            "dependencies": [],
+            "details": "Ensure the page file is created and a route is defined in the main routing configuration (e.g., `react-router-dom`).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Authentication Guard and Redirection",
+            "description": "Add logic within `StoryGenerationPage.tsx` to check the user's authentication status using the Zustand auth state. If the user is not authenticated, redirect them to the login page or display an appropriate access denied message.",
+            "dependencies": [
+              1
+            ],
+            "details": "Utilize the existing Zustand store for authentication state. Implement a `useEffect` hook or similar mechanism to perform the check on component mount and redirect using `useNavigate` if needed.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Integrate Shadcn UI Form Components",
+            "description": "Incorporate `shadcn/ui` components such as `Label`, `Textarea`, and `Button` into `StoryGenerationPage.tsx` to construct the basic layout for the story submission form.",
+            "dependencies": [
+              1
+            ],
+            "details": "Import and render the `Label` for the prompt, a `Textarea` for user input, and a `Button` for submission. Ensure basic structure is in place.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Develop Form State Management and Submission Logic",
+            "description": "Implement state management for the text prompt input (e.g., using `useState` for the `Textarea` value). Add an event handler for the form submission button to capture the input value and prepare it for future API submission.",
+            "dependencies": [
+              3
+            ],
+            "details": "Connect the `Textarea` to a state variable. Create an `onSubmit` handler for the form or an `onClick` handler for the button that logs the current prompt value to the console for verification.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Apply Basic Styling and User Experience Enhancements",
+            "description": "Apply basic styling to the form components to ensure readability and a clean layout. Add a placeholder to the `Textarea` and consider disabling the submit button if the input is empty.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Use Tailwind CSS classes (via `shadcn/ui` components) for spacing, padding, and alignment. Implement a simple conditional to disable the button based on the prompt's length.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 68,
@@ -1330,7 +1385,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:59:32.133Z",
+      "updated": "2025-06-29T04:59:41.906Z",
       "description": "Tasks for master context"
     }
   }

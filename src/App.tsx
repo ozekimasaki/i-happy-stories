@@ -9,7 +9,7 @@ import './style.css'
 
 function App() {
   return (
-    <MainLayout>
+    <>
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
@@ -20,8 +20,8 @@ function App() {
           </Route>
         </Route>
       </Routes>
-    </MainLayout>
-  )
+    </>
+  );
 }
 
-export default App 
+export default App; 
