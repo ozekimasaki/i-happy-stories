@@ -301,8 +301,62 @@
         "dependencies": [
           46
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize shadcn/ui Project",
+            "description": "Run the `shadcn/ui` initialization command to set up the basic configuration files and directory structure.",
+            "dependencies": [],
+            "details": "Execute `npx shadcn-ui@latest init` in the project root. Follow the prompts, selecting appropriate options for TypeScript, style (e.g., 'default' or 'new-york'), base color, and CSS variables. This command will create or modify `components.json`, `tailwind.config.js`, and `globals.css`.",
+            "status": "done",
+            "testStrategy": "Verify that `components.json` is created, `tailwind.config.js` is updated, and `globals.css` has new imports/variables."
+          },
+          {
+            "id": 2,
+            "title": "Configure Tailwind CSS and Global Styles",
+            "description": "Adjust `tailwind.config.js` and `globals.css` to ensure `shadcn/ui` styles are correctly applied and base styles are imported.",
+            "dependencies": [
+              1
+            ],
+            "details": "Open `tailwind.config.js` and ensure the `content` array correctly includes paths to your components (e.g., `./app/**/*.{js,ts,jsx,tsx}`, `./components/**/*.{js,ts,jsx,tsx}`). Verify that the `presets` array includes `[@shadcn/ui/tailwind]` and the `theme` object is correctly extended. In `globals.css`, ensure the `shadcn/ui` CSS variables are imported, typically at the top of the file (e.g., `@import './styles/base.css'; @import './styles/theme.css';` or similar, depending on the init output).",
+            "status": "done",
+            "testStrategy": "Run the development server (`npm run dev`). No visual changes expected yet, but ensure no compilation errors related to Tailwind or CSS imports."
+          },
+          {
+            "id": 3,
+            "title": "Verify `components.json` and Utility Files",
+            "description": "Confirm that `components.json` is correctly configured and essential utility files like `lib/utils.ts` are present and functional.",
+            "dependencies": [
+              2
+            ],
+            "details": "Review `components.json` to ensure `style`, `rsc`, `tailwind.config`, `tailwind.css`, `tailwind.baseColor`, `tailwind.cssVariables`, `prefix`, and `ui` properties are correctly set, especially `ui` pointing to the `components/ui` directory. Verify that `lib/utils.ts` (or similar path) exists and exports the `cn` utility function, which is crucial for `shadcn/ui` component styling.",
+            "status": "done",
+            "testStrategy": "Check the contents of `components.json` and `lib/utils.ts` manually. Ensure the `components/ui` directory is created and empty, ready for components."
+          },
+          {
+            "id": 4,
+            "title": "Add and Render a Sample Component (Button)",
+            "description": "Add a simple `Button` component using the `shadcn/ui` CLI and integrate it into a test page or component to verify the setup.",
+            "dependencies": [
+              3
+            ],
+            "details": "Run `npx shadcn-ui@latest add button` to generate the `Button` component files in `components/ui`. Then, import the `Button` component into a relevant page or a new temporary test component (e.g., `app/page.tsx` or `src/App.tsx`) and render it. For example: `<Button>Click Me</Button>`.",
+            "status": "done",
+            "testStrategy": "Start the development server (`npm run dev`). Navigate to the page where the `Button` component is rendered. Visually confirm that the `Button` is styled correctly according to `shadcn/ui`'s default appearance (e.g., rounded corners, appropriate colors, hover effects). Click the button to ensure no console errors."
+          },
+          {
+            "id": 5,
+            "title": "Finalize Integration and Document Setup",
+            "description": "Remove any temporary test code and add a brief note to the project's documentation (e.g., README) regarding the `shadcn/ui` integration.",
+            "dependencies": [
+              4
+            ],
+            "details": "Remove the temporary `Button` component usage from the test page/component (unless it's intended to be a permanent part of the UI). Add a section to the project's `README.md` or a dedicated `docs` file explaining that `shadcn/ui` has been integrated, how to add new components (e.g., `npx shadcn-ui@latest add <component-name>`), and any specific configuration choices made during setup.",
+            "status": "done",
+            "testStrategy": "Verify that the temporary test code has been removed. Check the `README.md` or documentation for the new `shadcn/ui` integration notes. Ensure the project still builds and runs without issues after cleanup."
+          }
+        ]
       },
       {
         "id": 55,
@@ -1057,7 +1111,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T03:48:40.639Z",
+      "updated": "2025-06-29T04:27:55.328Z",
       "description": "Tasks for master context"
     }
   }
