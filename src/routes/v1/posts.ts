@@ -35,13 +35,19 @@ posts.post('/', authMiddleware, async (c) => {
   try {
     // 1. 物語を生成・保存
     const story = await createStory(c, prompt);
+    let illustration = null;
     
-    // 2. 物語のキーシーンに基づいたイラストを生成・保存
-    const illustrationPrompt = `この物語の重要な場面を表現するイラストを生成してください。スタイルはアニメ風でお願いします。: ${story.content.substring(0, 500)}`;
-    const illustration = await createIllustration(c, story.id, illustrationPrompt);
+    try {
+      // 2. 物語のキーシーンに基づいたイラストを生成・保存
+      const illustrationPrompt = `この物語の重要な場面を表現するイラストを生成してください。スタイルはアニメ風でお願いします。: ${story.content.substring(0, 500)}`;
+      illustration = await createIllustration(c, story.id, illustrationPrompt);
+    } catch (illustrationError) {
+      console.error('Failed to create illustration, but story was saved:', illustrationError);
+      // イラスト生成が失敗しても、物語は成功しているので、エラーは返さない
+    }
 
     return c.json({ 
-      message: 'Story and illustration created and saved successfully', 
+      message: 'Story created successfully. Illustration creation status may vary.', 
       story: story,
       illustration: illustration
     }, 201);

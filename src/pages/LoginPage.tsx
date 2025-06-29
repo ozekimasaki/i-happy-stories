@@ -39,7 +39,7 @@ const formSchema = z.object({
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuthStore();
+  const { setSession, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -58,12 +58,14 @@ const LoginPage = () => {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       const data = await loginUser(values);
-      login(data.user, data.token);
-      localStorage.setItem('accessToken', data.token);
-      navigate('/stories');
-    } catch (error) {
-      console.error(error);
-      toast.error((error as Error).message);
+      if (data.session) {
+        setSession(data.session);
+        navigate('/stories');
+      } else {
+        toast.error("Login failed: No session received.");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred.");
     }
   }
 

@@ -1,29 +1,29 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { User } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthState {
+  session: Session | null;
   isAuthenticated: boolean;
-  user: User | null;
-  token: string | null;
-  login: (userData: User, token: string) => void;
+  setSession: (session: Session | null) => void;
   logout: () => void;
-  setToken: (authToken: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
+      session: null,
       isAuthenticated: false,
-      user: null,
-      token: null,
-      login: (userData, token) => set({ isAuthenticated: true, user: userData, token }),
-      logout: () => set({ isAuthenticated: false, user: null, token: null }),
-      setToken: (authToken) => set({ token: authToken }),
+      setSession: (session) =>
+        set({
+          session,
+          isAuthenticated: !!session,
+        }),
+      logout: () => set({ session: null, isAuthenticated: false }),
     }),
     {
-      name: 'auth-storage', // localStorageのキー名
-      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+      name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
     }
   )
 ); 

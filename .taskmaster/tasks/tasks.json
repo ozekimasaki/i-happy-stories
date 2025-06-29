@@ -1344,8 +1344,64 @@
           67,
           73
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize UI Components and State for Content Display",
+            "description": "Create or identify the necessary React components (e.g., `StoryDisplayPage.tsx` or within `StoryGenerationPage.tsx`) and define the component's local state to manage `storyText` (string), `illustrationUrl` (string), `isLoading` (boolean), and `error` (string | null).",
+            "dependencies": [],
+            "details": "Use React's `useState` hook to define the state variables. Create a basic layout with placeholders for the story text and image. This subtask focuses purely on setting up the state and the initial empty UI structure.",
+            "status": "done",
+            "testStrategy": "Verify that the component renders without errors and the initial state variables are correctly initialized (e.g., `isLoading` is true, `storyText` and `illustrationUrl` are empty)."
+          },
+          {
+            "id": 2,
+            "title": "Integrate Content Fetching API Call and Loading Indicator",
+            "description": "Implement the asynchronous function to call the backend API endpoint responsible for providing the generated story content (text and image URL). Manage the `isLoading` state to show a loading indicator while the fetch is in progress.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use React's `useEffect` hook to trigger the API call when the component mounts or when a relevant dependency (e.g., a story ID) changes. Use `axios` or the native `fetch` API. Set `isLoading` to `true` before the call and `false` after it completes (success or failure). Display a simple loading spinner or 'Generating...' text when `isLoading` is true.",
+            "status": "done",
+            "testStrategy": "Simulate an API call (e.g., using a mock service worker or a test double). Verify that the loading indicator appears when the call starts and disappears when it completes. Check console logs for successful API calls."
+          },
+          {
+            "id": 3,
+            "title": "Render Generated Story Text",
+            "description": "Update the UI to conditionally display the `storyText` received from the API call. Ensure proper formatting (e.g., paragraphs, line breaks) if applicable.",
+            "dependencies": [
+              2
+            ],
+            "details": "Once the API call in Subtask 2 successfully populates the `storyText` state, render this text within a designated area of the UI. Use appropriate HTML tags (e.g., `<p>` for paragraphs, `<div>` with `white-space: pre-wrap` for preserving line breaks if the text comes as a single string). Ensure the text is only displayed when `isLoading` is false and `storyText` is not empty.",
+            "status": "done",
+            "testStrategy": "After a successful API call, verify that the received story text is correctly rendered on the page. Test with multi-paragraph text to ensure formatting is preserved."
+          },
+          {
+            "id": 4,
+            "title": "Display Generated Illustration Image",
+            "description": "Update the UI to conditionally display the `illustrationUrl` received from the API call using an `<img>` tag. Include appropriate alt text for accessibility.",
+            "dependencies": [
+              2
+            ],
+            "details": "After the API call in Subtask 2 successfully populates the `illustrationUrl` state, render an `<img>` tag with its `src` attribute set to `illustrationUrl`. Add a descriptive `alt` attribute (e.g., 'Illustration for the story'). Ensure the image is only displayed when `isLoading` is false and `illustrationUrl` is not empty.",
+            "status": "done",
+            "testStrategy": "After a successful API call, verify that the image is displayed correctly. Inspect the `<img>` tag to ensure the `src` and `alt` attributes are set as expected. Test with a broken image URL to ensure it handles gracefully (e.g., shows alt text)."
+          },
+          {
+            "id": 5,
+            "title": "Implement Comprehensive Error and Empty State Handling",
+            "description": "Enhance the UI to display user-friendly error messages if the API call fails (e.g., network error, server error). Also, handle cases where no content is available or the generation process is still ongoing/failed to produce content.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Modify the API call logic in Subtask 2 to catch errors and update the `error` state. Conditionally render an error message component or text when the `error` state is populated. Additionally, if `isLoading` is false and both `storyText` and `illustrationUrl` are empty, display a 'No content available' or 'Story generation failed' message, providing clear feedback to the user.",
+            "status": "done",
+            "testStrategy": "Simulate API failures (e.g., network error, 500 status code) and verify that the correct error message is displayed. Test scenarios where the API returns empty text/URL to ensure the 'No content available' message appears. Verify that error messages clear when a new successful generation occurs."
+          }
+        ]
       },
       {
         "id": 75,
@@ -1385,7 +1441,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T07:16:54.483Z",
+      "updated": "2025-06-29T07:59:50.020Z",
       "description": "Tasks for master context"
     }
   }
