@@ -808,7 +808,62 @@
           56
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Scaffold Auth Pages and Verify Shadcn/ui Setup",
+            "description": "Create the base files for the login and signup pages and ensure that `shadcn/ui` components are correctly configured and importable within the project.",
+            "dependencies": [],
+            "details": "Create `src/pages/LoginPage.tsx` and `src/pages/SignupPage.tsx`. Add a basic functional component structure to each. Verify `shadcn/ui` installation by attempting to import and render a simple component like `Button` or `Card` in one of the new pages to confirm no setup issues.",
+            "status": "done",
+            "testStrategy": "Verify `LoginPage.tsx` and `SignupPage.tsx` files exist and render a basic 'Hello World' or a placeholder `shadcn/ui` component without errors in the browser."
+          },
+          {
+            "id": 2,
+            "title": "Implement Login Form UI with Shadcn/ui",
+            "description": "Develop the user interface for the login form in `LoginPage.tsx` using `shadcn/ui` components, including fields for email and password, and a submit button.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/pages/LoginPage.tsx`, utilize `shadcn/ui` components such as `Card` for the form container, `Label` and `Input` for email and password fields, and `Button` for the submit action. Structure the form semantically within a `<form>` tag. Focus solely on the visual layout and component integration; no form state management or validation logic is needed at this stage.",
+            "status": "pending",
+            "testStrategy": "Visually inspect `LoginPage.tsx` in the browser to ensure all specified `shadcn/ui` components (Card, Label, Input, Button) are rendered correctly and the form layout is as expected."
+          },
+          {
+            "id": 3,
+            "title": "Implement Signup Form UI with Shadcn/ui",
+            "description": "Develop the user interface for the signup form in `SignupPage.tsx` using `shadcn/ui` components, including fields for email and password, and a submit button.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/pages/SignupPage.tsx`, replicate the UI structure from the login form (Subtask 2). Use `shadcn/ui` `Card`, `Label`, `Input` for email and password fields, and `Button` for the submit action. Ensure consistency in design and component usage with the login form. No form state management or validation logic is needed yet.",
+            "status": "pending",
+            "testStrategy": "Visually inspect `SignupPage.tsx` in the browser to confirm all `shadcn/ui` components are rendered correctly and the form layout mirrors the login form's structure."
+          },
+          {
+            "id": 4,
+            "title": "Add Client-Side Validation to Login Form",
+            "description": "Implement basic client-side validation for the email and password fields in the login form, providing immediate user feedback.",
+            "dependencies": [
+              2
+            ],
+            "details": "Integrate a form library like `react-hook-form` with `zod` for schema validation into `LoginPage.tsx`. Define a schema that marks email and password as required fields. Add basic email format validation. Display validation error messages next to the respective input fields using `shadcn/ui`'s `FormMessage` or similar pattern. The form should prevent submission if validation fails.",
+            "status": "pending",
+            "testStrategy": "Attempt to submit the login form with empty fields, invalid email format, and valid credentials. Verify that appropriate error messages appear for invalid inputs and disappear for valid ones. Ensure the form cannot be submitted when validation errors are present."
+          },
+          {
+            "id": 5,
+            "title": "Add Client-Side Validation to Signup Form",
+            "description": "Implement basic client-side validation for the email and password fields in the signup form, consistent with the login form's validation.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Apply the same client-side validation approach (e.g., `react-hook-form` with `zod`) to `SignupPage.tsx`. Ensure email and password fields are marked as required and email has basic format validation. Display validation error messages using `shadcn/ui` components. Maintain consistency in validation rules and error display with the login form.",
+            "status": "pending",
+            "testStrategy": "Attempt to submit the signup form with empty fields, invalid email format, and valid credentials. Verify that appropriate error messages appear for invalid inputs and disappear for valid ones. Ensure the form cannot be submitted when validation errors are present."
+          }
+        ]
       },
       {
         "id": 64,
@@ -1220,7 +1275,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T04:47:28.263Z",
+      "updated": "2025-06-29T04:49:58.792Z",
       "description": "Tasks for master context"
     }
   }
