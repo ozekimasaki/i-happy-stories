@@ -36,7 +36,7 @@ const Header: React.FC = () => {
                 <Button variant="outline">ログイン</Button>
               </Link>
               <Link to="/signup">
-                <Button>サインアップ</Button>
+                <Button>新規登録</Button>
               </Link>
             </div>
           )}

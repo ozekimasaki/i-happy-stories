@@ -27,10 +27,10 @@ import {
 
 const formSchema = z.object({
   email: z.string().email({
-    message: "Invalid email address.",
+    message: "無効なメールアドレスです。",
   }),
   password: z.string().min(8, {
-    message: "Password must be at least 8 characters.",
+    message: "パスワードは8文字以上である必要があります。",
   }),
 })
 
@@ -50,7 +50,7 @@ const SignupPage = () => {
       console.log("Attempting to sign up...");
       await signupUser(values);
       console.log("Signup successful.");
-      toast.success('Signup successful! Please login.');
+      toast.success('サインアップが成功しました！ログインしてください。');
       navigate('/login');
     } catch (error) {
       console.error("Signup failed:", error);
@@ -62,8 +62,8 @@ const SignupPage = () => {
     <div className="container flex items-center justify-center min-h-[calc(100vh-8rem)]">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Create an Account</CardTitle>
-          <CardDescription>Enter your details to create a new account.</CardDescription>
+          <CardTitle>アカウントを作成</CardTitle>
+          <CardDescription>新しいアカウントを作成するために詳細を入力してください。</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -73,9 +73,9 @@ const SignupPage = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>メールアドレス</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="Enter your email" {...field} />
+                      <Input type="email" placeholder="メールアドレスを入力" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -86,16 +86,16 @@ const SignupPage = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>パスワード</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Create a password" {...field} />
+                      <Input type="password" placeholder="パスワードを作成" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <Button type="submit" className="w-full">
-                Create Account
+                アカウント作成
               </Button>
             </form>
           </Form>

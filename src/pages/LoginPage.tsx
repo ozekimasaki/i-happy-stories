@@ -30,10 +30,10 @@ import {
 
 const formSchema = z.object({
   email: z.string().email({
-    message: "Invalid email address.",
+    message: "無効なメールアドレスです。",
   }),
   password: z.string().min(1, {
-    message: "Password is required.",
+    message: "パスワードは必須です。",
   }),
 })
 
@@ -62,13 +62,13 @@ const LoginPage = () => {
         setSession(data.session);
         navigate('/stories');
       } else {
-        toast.error("Login failed: No session received.");
+        toast.error("ログインに失敗しました：セッションが受信されませんでした。");
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("An unexpected error occurred.");
+        toast.error("予期せぬエラーが発生しました。");
       }
     }
   }
@@ -77,8 +77,8 @@ const LoginPage = () => {
     <div className="container flex items-center justify-center min-h-[calc(100vh-8rem)]">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
+          <CardTitle>ログイン</CardTitle>
+          <CardDescription>アカウントにアクセスするために認証情報を入力してください。</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -88,9 +88,9 @@ const LoginPage = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>メールアドレス</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="Enter your email" {...field} />
+                      <Input type="email" placeholder="メールアドレスを入力" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -101,16 +101,16 @@ const LoginPage = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>パスワード</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Enter your password" {...field} />
+                      <Input type="password" placeholder="パスワードを入力" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <Button type="submit" className="w-full">
-                Login
+                ログイン
               </Button>
             </form>
           </Form>
