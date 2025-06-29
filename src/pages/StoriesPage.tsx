@@ -45,7 +45,7 @@ const StoriesPage: React.FC = () => {
           throw new Error('物語の取得に失敗しました。');
         }
 
-        const data = await response.json();
+        const data = await response.json() as { stories: Story[] };
         console.log('Fetched stories:', data.stories);
         setStories(data.stories || []);
       } catch (error: any) {

@@ -50,7 +50,7 @@ const StoryDetailPage: React.FC = () => {
           throw new Error('物語の取得に失敗しました。');
         }
 
-        const data = await response.json();
+        const data = await response.json() as { story: Story };
         setStory(data.story);
       } catch (error: any) {
         toast.error(error.message || '予期せぬエラーが発生しました。');

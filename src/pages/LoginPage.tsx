@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -57,7 +56,7 @@ const LoginPage = () => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const data = await loginUser(values);
+      const data = await loginUser(values) as { session: Session | null };
       if (data.session) {
         setSession(data.session);
         navigate('/stories');

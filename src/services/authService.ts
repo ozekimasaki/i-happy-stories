@@ -8,7 +8,7 @@ export const signupUser = async (credentials: any) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response.json() as { error?: string };
     throw new Error(errorData.error || 'Signup failed');
   }
 
@@ -25,7 +25,7 @@ export const loginUser = async (credentials: any) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response.json() as { error?: string };
     throw new Error(errorData.error || 'Login failed');
   }
 

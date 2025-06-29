@@ -32,11 +32,11 @@ const StoryGenerationPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json() as { error?: string };
         throw new Error(errorData.error || '物語の生成に失敗しました。');
       }
 
-      const data = await response.json();
+      const data = await response.json() as { story: { content: string }, illustration?: { image_url: string } };
       setStory({
         story: data.story.content,
         imageUrl: data.illustration?.image_url || '',
