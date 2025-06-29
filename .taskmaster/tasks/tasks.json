@@ -1491,7 +1491,63 @@
           75
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "End-to-End Authentication Flow Testing",
+            "description": "Conduct comprehensive end-to-end testing of user authentication features including signup, login, and logout processes.",
+            "dependencies": [],
+            "details": "Manually and/or automatically test user registration, successful login with valid credentials, failed login with invalid credentials, and proper logout functionality. Verify session management and error handling for authentication flows.",
+            "status": "done",
+            "testStrategy": "Manual testing with various user scenarios (new user, existing user, invalid credentials). Consider automated E2E tests if framework is in place."
+          },
+          {
+            "id": 2,
+            "title": "Story & Illustration Generation E2E Testing",
+            "description": "Perform end-to-end testing of the core story and illustration generation features, from prompt submission to display.",
+            "dependencies": [
+              1
+            ],
+            "details": "Test submitting diverse story prompts, verifying the generation process, and ensuring the generated story text and illustration images are correctly displayed on the UI. Check for edge cases, prompt length variations, and error handling during generation.",
+            "status": "done",
+            "testStrategy": "Manual testing with varied prompt inputs (short, long, specific themes, unusual requests). Verify output against expectations and UI rendering."
+          },
+          {
+            "id": 3,
+            "title": "Supabase Data Integrity Verification",
+            "description": "Verify the integrity and correctness of data stored in Supabase following story and illustration generation.",
+            "dependencies": [
+              2
+            ],
+            "details": "After generating stories and illustrations, inspect the Supabase database to ensure that all relevant data (story text, image URLs, user IDs, timestamps, prompt details) is correctly stored, linked, and consistent. Check for data corruption or missing entries.",
+            "status": "done",
+            "testStrategy": "Manual inspection of Supabase tables via its dashboard or programmatic queries. Cross-reference displayed data with database entries for accuracy and completeness."
+          },
+          {
+            "id": 4,
+            "title": "Deploy Latest Code to Cloudflare Pages",
+            "description": "Deploy the latest stable version of the application code to the Cloudflare Pages production environment.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Trigger the CI/CD pipeline or manually deploy the current main/production branch to Cloudflare Pages. Monitor the deployment process for any errors or warnings, ensuring a successful build and publish.",
+            "status": "pending",
+            "testStrategy": "Verify deployment status in Cloudflare Pages dashboard. Check build logs for success and absence of critical errors. Confirm the new version is live."
+          },
+          {
+            "id": 5,
+            "title": "Production Environment Functionality Verification",
+            "description": "Conduct a final round of end-to-end testing on the live application deployed to Cloudflare Pages to confirm all features work correctly in production.",
+            "dependencies": [
+              4
+            ],
+            "details": "Repeat critical end-to-end tests for authentication (signup, login, logout), story/illustration generation, and display on the Cloudflare Pages URL. Verify responsiveness, performance, and any environment-specific configurations in the live setting.",
+            "status": "pending",
+            "testStrategy": "Manual smoke testing of key features (login, generate story, view story) on the deployed URL. Compare behavior to local environment and ensure no regressions or production-specific issues."
+          }
+        ]
       },
       {
         "id": 77,
@@ -1582,7 +1638,7 @@
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T11:51:22.315Z",
+      "updated": "2025-06-29T13:52:07.571Z",
       "description": "Tasks for master context"
     }
   }
