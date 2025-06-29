@@ -57,12 +57,9 @@ ${userInput}
 }
 `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent({
+    const result = await genAI.models.generateContent({
+      model: "gemini-1.5-flash",
       contents: [{ role: "user", parts: [{ text: detailedPrompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
     });
 
     const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
