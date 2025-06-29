@@ -48,7 +48,6 @@ posts.get('/:id', authMiddleware, async (c) => {
 
 // 新しい投稿を作成 (認証が必要)
 posts.post('/', authMiddleware, async (c) => {
-  const user = c.get('user');
   const body = await c.req.json().catch(() => ({}));
   const validationResult = storyRequestSchema.safeParse(body);
 
