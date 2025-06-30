@@ -50,47 +50,57 @@ const StoryGenerationPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">物語の作成</h1>
-      <div className="w-full space-y-4">
-        <div>
-          <label htmlFor="prompt" className="block text-sm font-medium text-gray-700">プロンプト</label>
-          <textarea
-            id="prompt"
-            placeholder="ここに物語のアイデアを入力してください..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm h-32"
-          />
+    <div className="container mx-auto p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-lg border border-stone-200 space-y-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2 text-stone-800">物語の作成</h1>
+          <p className="text-stone-500">あなたのアイデアから、AIが世界に一つだけの物語を紡ぎ出します。</p>
         </div>
-        <button onClick={handleSubmit} disabled={!prompt.trim() || isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
-          {isLoading ? '生成中...' : '物語を生成する'}
-        </button>
+        
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="prompt" className="block text-sm font-medium text-stone-700">プロンプト</label>
+            <textarea
+              id="prompt"
+              placeholder="例：「魔法の森に住む、歌うのが好きな小さなキツネの冒険」"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 bg-white border border-stone-300 rounded-md shadow-sm placeholder-stone-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm h-32"
+            />
+          </div>
+          <button onClick={handleSubmit} disabled={!prompt.trim() || isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            {isLoading ? '生成中...' : '物語を生成する'}
+          </button>
+        </div>
+
+        {isLoading && (
+          <div className="mt-4 text-center text-stone-600">
+            <p>物語を生成しています。しばらくお待ちください...</p>
+          </div>
+        )}
+
+        {story && (
+          <div className="mt-6 pt-6 border-t border-stone-200">
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-bold text-stone-800">生成された物語</h2>
+            </div>
+            <div className="space-y-4">
+              {story.imageUrl && (
+                <img
+                  src={story.imageUrl}
+                  alt="生成されたイラスト"
+                  className="rounded-lg w-full max-w-md mx-auto shadow-md"
+                />
+              )}
+              <div className="prose prose-stone max-w-none lg:prose-lg">
+                {story.story.split('\n').map((paragraph, index) => (
+                  paragraph.trim() && <p key={index}>{paragraph}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      {isLoading && (
-        <div className="mt-4 text-center">
-          <p>物語を生成しています。しばらくお待ちください...</p>
-        </div>
-      )}
-
-      {story && (
-        <div className="mt-8 border rounded-lg shadow-md bg-white">
-          <div className="p-4 border-b">
-            <h2 className="text-xl font-bold">生成された物語</h2>
-          </div>
-          <div className="p-4 space-y-4">
-            {story.imageUrl && (
-              <img
-                src={story.imageUrl}
-                alt="生成されたイラスト"
-                className="rounded-lg w-full max-w-md mx-auto"
-              />
-            )}
-            <p className="whitespace-pre-wrap">{story.story}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

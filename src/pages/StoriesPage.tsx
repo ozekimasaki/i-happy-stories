@@ -72,17 +72,17 @@ const StoriesPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">あなたの物語一覧</h1>
+      <h1 className="text-2xl font-bold mb-4 text-stone-800">あなたの物語一覧</h1>
       
       {stories.length === 0 ? (
-        <p>まだ物語がありません。新しい物語を作成しましょう！</p>
+        <p className="text-stone-600">まだ物語がありません。新しい物語を作成しましょう！</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {stories.map((story) => (
-            <Link to={`/stories/${story.id}`} key={story.id} className="block hover:no-underline">
-              <div className="h-full flex flex-col bg-white border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+            <Link to={`/stories/${story.id}`} key={story.id} className="block hover:no-underline group">
+              <div className="h-full flex flex-col bg-white border border-stone-200 rounded-lg group-hover:border-amber-400 transition-colors duration-200 overflow-hidden">
                 <div className="p-4">
-                  <h2 className="text-lg font-bold truncate">{story.title}</h2>
+                  <h2 className="text-lg font-bold truncate text-stone-800">{story.title}</h2>
                 </div>
                 <div className="px-4 pb-4 flex-grow">
                   {story.illustrations && story.illustrations.length > 0 && (
@@ -92,12 +92,12 @@ const StoriesPage: React.FC = () => {
                       className="rounded-md object-cover h-48 w-full mb-4" 
                     />
                   )}
-                  <p className="text-sm text-gray-500 line-clamp-3">
+                  <p className="text-sm text-stone-600 line-clamp-3">
                     {story.content}
                   </p>
                 </div>
-                <div className="p-4 pt-2 mt-auto border-t">
-                  <p className="text-xs text-gray-400">
+                <div className="p-4 pt-2 mt-auto border-t border-t-stone-200">
+                  <p className="text-xs text-stone-500">
                     作成日時: {new Date(story.created_at).toLocaleString()}
                   </p>
                 </div>

@@ -68,34 +68,38 @@ const StoryDetailPage: React.FC = () => {
   }, [id, session]);
 
   if (isLoading) {
-    return <div className="container mx-auto p-4">物語を読み込んでいます...</div>;
+    return <div className="container mx-auto p-4 text-stone-600">物語を読み込んでいます...</div>;
   }
 
   if (!story) {
-    return <div className="container mx-auto p-4">物語が見つかりませんでした。</div>;
+    return <div className="container mx-auto p-4 text-stone-600">物語が見つかりませんでした。</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
-            <Link to="/stories" className="text-blue-500 hover:underline mb-4 inline-block">&larr; 物語一覧へ戻る</Link>
-      <h1 className="text-3xl font-bold mb-2">{story.title}</h1>
-      <p className="text-sm text-gray-500 mb-4">
-        作成日時: {new Date(story.created_at).toLocaleString()}
-      </p>
-      
-      {story.illustrations && story.illustrations.length > 0 && (
-        <img 
-          src={story.illustrations[0].image_url} 
-          alt={story.title}
-          className="rounded-lg object-cover w-full max-w-2xl mx-auto mb-6" 
-        />
-      )}
-      
-      <div className="prose max-w-none">
-        <p>{story.content}</p>
+    <div className="container mx-auto p-4 sm:p-6 md:p-8">
+      <div className="bg-white p-6 sm:p-8 rounded-lg border border-stone-200">
+        <Link to="/stories" className="text-stone-600 hover:text-stone-800 hover:underline mb-4 inline-block">&larr; 物語一覧へ戻る</Link>
+        <h1 className="text-3xl font-bold mb-2 text-stone-800">{story.title}</h1>
+        <p className="text-sm text-stone-500 mb-6">
+          作成日時: {new Date(story.created_at).toLocaleString()}
+        </p>
+        
+        {story.illustrations && story.illustrations.length > 0 && (
+          <img 
+            src={story.illustrations[0].image_url} 
+            alt={story.title}
+            className="rounded-lg object-cover w-full max-w-3xl mx-auto mb-8 shadow-md" 
+          />
+        )}
+        
+        <div className="prose prose-stone max-w-none lg:prose-lg">
+          {story.content.split('\n').map((paragraph, index) => (
+            paragraph.trim() && <p key={index}>{paragraph}</p>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
 
-export default StoryDetailPage; 
+export default StoryDetailPage;
