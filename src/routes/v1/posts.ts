@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../../middleware/auth';
-import { createStory, getStoriesByUserId, getStoryById } from '../../services/storyService';
+import { createStory, getStoriesByUserId, getStoryById, deleteStory } from '../../services/storyService';
 import { createIllustration } from '../../services/illustrationService';
 import { storyRequestSchema } from '../../schemas/storySchema';
 
@@ -94,9 +94,30 @@ posts.put('/:id', (c) => {
 });
 
 // 投稿を削除
-posts.delete('/:id', (c) => {
-    const { id } = c.req.param();
-    return c.json({ message: `投稿(ID:${id})を削除しました` });
+posts.delete('/:id', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const id = parseInt(c.req.param('id'), 10);
+
+  if (!user) {
+    return c.json({ error: '認証が必要です' }, 401);
+  }
+  if (Number.isNaN(id)) {
+    return c.json({ error: 'IDの形式が正しくありません' }, 400);
+  }
+
+  try {
+    const result = await deleteStory(c, id, user.id);
+    return c.json(result, 200);
+  } catch (error: unknown) {
+    console.error(`Error deleting story ${id}:`, error);
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+    
+    if (errorMessage.includes('見つからないか') || errorMessage.includes('権限がありません')) {
+        return c.json({ error: errorMessage }, 404);
+    }
+    
+    return c.json({ error: '物語の削除中にサーバーエラーが発生しました' }, 500);
+  }
 });
 
 export default posts;

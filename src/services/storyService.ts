@@ -165,3 +165,81 @@ export const getStoryById = async (c: Context, storyId: number, userId:string) =
 
   return data;
 };
+
+export const deleteStory = async (c: Context, storyId: number, userId: string) => {
+  const supabase = getSupabase(c);
+
+  // 1. 削除対象の物語と、関連するイラストの情報を取得
+  const { data: story, error: fetchError } = await supabase
+    .from('stories')
+    .select(`
+      id,
+      user_id,
+      illustrations (
+        image_url
+      )
+    `)
+    .match({ id: storyId, user_id: userId })
+    .single();
+
+  // 物語が見つからない、または取得でエラーが発生した場合
+  if (fetchError || !story) {
+    // fetchError.code 'PGRST116' は 'exact-one row violation' を意味し、0件だった場合に発生する
+    if (fetchError && fetchError.code !== 'PGRST116') { 
+        console.error(`Error fetching story ${storyId} for deletion:`, fetchError);
+        throw new Error('物語の情報を取得中にエラーが発生しました。');
+    }
+    // 物語が存在しない、またはユーザーに権限がない場合
+    throw new Error('削除対象の物語が見つからないか、削除する権限がありません。');
+  }
+
+  // 2. 関連するイラスト画像をStorageから削除
+  if (story.illustrations && story.illustrations.length > 0) {
+    const imagePaths = story.illustrations
+      .map(img => {
+        if (!img.image_url) return null;
+        // URLからパスを抽出 (例: .../illustrations/public/image.png -> public/image.png)
+        try {
+          const url = new URL(img.image_url);
+          const pathParts = url.pathname.split('/');
+          const bucketName = 'illustrations';
+          const bucketIndex = pathParts.indexOf(bucketName);
+          if (bucketIndex !== -1 && bucketIndex + 1 < pathParts.length) {
+            return pathParts.slice(bucketIndex + 1).join('/');
+          }
+          return null;
+        } catch (e) {
+            console.error('無効な形式の画像URLです:', img.image_url);
+            return null;
+        }
+      })
+      .filter((path): path is string => path !== null);
+
+    if (imagePaths.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from('illustrations')
+        .remove(imagePaths);
+
+      if (storageError) {
+        console.error(`ストレージから画像を削除中にエラーが発生しました (story ${storyId}):`, storageError);
+        // ここではエラーを投げずに処理を続行することも可能ですが、
+        // 一貫性を保つためにエラーとして処理を中断します。
+        throw new Error('ストレージからの画像削除に失敗しました。');
+      }
+    }
+  }
+
+  // 3. データベースから物語のレコードを削除
+  // これにより、外部キーに ON DELETE CASCADE が設定されていれば、関連するイラストのレコードも削除されます。
+  const { error: deleteError } = await supabase
+    .from('stories')
+    .delete()
+    .match({ id: storyId });
+
+  if (deleteError) {
+    console.error(`Error deleting story ${storyId} from Supabase:`, deleteError);
+    throw new Error(`物語の削除に失敗しました: ${deleteError.message}`);
+  }
+
+  return { message: '物語を削除しました。' };
+};

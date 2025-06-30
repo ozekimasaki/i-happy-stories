@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:all": "concurrently \"pnpm run dev\" \"pnpm run dev:worker\"",
+    "dev:all": "concurrently --names \"vite,wrangler\" \"pnpm:dev\" \"pnpm:dev:worker\"",
     "dev:worker": "wrangler dev",
     "typegen": "wrangler types",
     "build": "tsc && vite build",
