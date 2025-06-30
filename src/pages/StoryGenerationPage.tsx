@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from "sonner";
 
@@ -41,8 +38,12 @@ const StoryGenerationPage: React.FC = () => {
         story: data.story.content,
         imageUrl: data.illustration?.image_url || '',
       });
-    } catch (err: any) {
-      toast.error(err.message || '予期せぬエラーが発生しました。');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error('予期せぬエラーが発生しました。');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -51,20 +52,20 @@ const StoryGenerationPage: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">物語の作成</h1>
-      <div className="grid w-full gap-4">
+      <div className="w-full space-y-4">
         <div>
-          <Label htmlFor="prompt">プロンプト</Label>
-          <Textarea
+          <label htmlFor="prompt" className="block text-sm font-medium text-gray-700">プロンプト</label>
+          <textarea
             id="prompt"
             placeholder="ここに物語のアイデアを入力してください..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            className="mt-1"
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm h-32"
           />
         </div>
-        <Button onClick={handleSubmit} disabled={!prompt.trim() || isLoading}>
+        <button onClick={handleSubmit} disabled={!prompt.trim() || isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
           {isLoading ? '生成中...' : '物語を生成する'}
-        </Button>
+        </button>
       </div>
 
       {isLoading && (
@@ -74,11 +75,11 @@ const StoryGenerationPage: React.FC = () => {
       )}
 
       {story && (
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle>生成された物語</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="mt-8 border rounded-lg shadow-md bg-white">
+          <div className="p-4 border-b">
+            <h2 className="text-xl font-bold">生成された物語</h2>
+          </div>
+          <div className="p-4 space-y-4">
             {story.imageUrl && (
               <img
                 src={story.imageUrl}
@@ -87,11 +88,11 @@ const StoryGenerationPage: React.FC = () => {
               />
             )}
             <p className="whitespace-pre-wrap">{story.story}</p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
-export default StoryGenerationPage; 
+export default StoryGenerationPage;

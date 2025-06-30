@@ -1,5 +1,6 @@
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '../ui/button';
+
 import { useAuthStore } from '@/stores/authStore';
 
 const Header: React.FC = () => {
@@ -24,19 +25,19 @@ const Header: React.FC = () => {
                 マイストーリー
               </Link>
               <Link to="/generate-story">
-                <Button>物語を作成</Button>
+                <button className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded">物語を作成</button>
               </Link>
-              <Button variant="ghost" onClick={handleLogout}>
+              <button className="bg-transparent text-gray-600 hover:text-gray-800 py-2 px-4 rounded" onClick={handleLogout}>
                 ログアウト
-              </Button>
+              </button>
             </div>
           ) : (
             <div className="flex items-center gap-4">
               <Link to="/login">
-                <Button variant="outline">ログイン</Button>
+                <button className="border border-gray-600 text-gray-600 hover:bg-gray-100 py-2 px-4 rounded">ログイン</button>
               </Link>
               <Link to="/signup">
-                <Button>新規登録</Button>
+                <button className="bg-gray-800 text-white hover:bg-gray-700 py-2 px-4 rounded">新規登録</button>
               </Link>
             </div>
           )}

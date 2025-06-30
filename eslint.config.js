@@ -11,39 +11,29 @@ export default [
     ignores: ["dist", "node_modules", "build", ".wrangler/"],
   },
   js.configs.recommended,
+  // Config for source files
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ["src/**/*.{ts,tsx}"],
     plugins: {
       "@typescript-eslint": tsPlugin,
-    },
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-    rules: {
-      ...tsPlugin.configs["eslint-recommended"].rules,
-      ...tsPlugin.configs.recommended.rules,
-    },
-  },
-  {
-    files: ["**/*.{jsx,tsx}"],
-    plugins: {
       react: pluginReact,
       "react-hooks": pluginReactHooks,
       "react-refresh": pluginReactRefresh,
     },
     languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: "tsconfig.json",
+        tsconfigRootDir: import.meta.dirname,
+        ecmaFeatures: { jsx: true },
+      },
       globals: {
         ...globals.browser,
       },
-      parserOptions: {
-        ecmaFeatures: { jsx: true },
-      },
     },
     rules: {
+      ...tsPlugin.configs["eslint-recommended"].rules,
+      ...tsPlugin.configs.recommended.rules,
       ...pluginReact.configs.recommended.rules,
       ...pluginReact.configs["jsx-runtime"].rules,
       ...pluginReactHooks.configs.recommended.rules,
@@ -56,6 +46,24 @@ export default [
       react: {
         version: "detect",
       },
+    },
+  },
+  // Config for config files
+  {
+    files: ["*.config.ts", "*.config.js", "eslint.config.js"],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: "tsconfig.node.json",
+        tsconfigRootDir: import.meta.dirname,
+      },
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      ...tsPlugin.configs["eslint-recommended"].rules,
+      ...tsPlugin.configs.recommended.rules,
     },
   },
 ];

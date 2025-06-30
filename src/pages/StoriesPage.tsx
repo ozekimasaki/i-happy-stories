@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+
 
 interface Story {
   id: number;
@@ -48,8 +48,12 @@ const StoriesPage: React.FC = () => {
         const data = await response.json() as { stories: Story[] };
         console.log('Fetched stories:', data.stories);
         setStories(data.stories || []);
-      } catch (error: any) {
-        toast.error(error.message || '予期せぬエラーが発生しました。');
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error('予期せぬエラーが発生しました。');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -75,12 +79,12 @@ const StoriesPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {stories.map((story) => (
-            <Link to={`/stories/${story.id}`} key={story.id}>
-              <Card className="h-full flex flex-col">
-                <CardHeader>
-                  <CardTitle>{story.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-grow">
+            <Link to={`/stories/${story.id}`} key={story.id} className="block hover:no-underline">
+              <div className="h-full flex flex-col bg-white border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+                <div className="p-4">
+                  <h2 className="text-lg font-bold truncate">{story.title}</h2>
+                </div>
+                <div className="px-4 pb-4 flex-grow">
                   {story.illustrations && story.illustrations.length > 0 && (
                     <img 
                       src={story.illustrations[0].image_url} 
@@ -91,13 +95,13 @@ const StoriesPage: React.FC = () => {
                   <p className="text-sm text-gray-500 line-clamp-3">
                     {story.content}
                   </p>
-                </CardContent>
-                <CardFooter>
+                </div>
+                <div className="p-4 pt-2 mt-auto border-t">
                   <p className="text-xs text-gray-400">
                     作成日時: {new Date(story.created_at).toLocaleString()}
                   </p>
-                </CardFooter>
-              </Card>
+                </div>
+              </div>
             </Link>
           ))}
         </div>

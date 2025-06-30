@@ -7,7 +7,7 @@ import StoryGenerationPage from './pages/StoryGenerationPage';
 import StoryDetailPage from './pages/StoryDetailPage';
 import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
-import './style.css'
+
 
 function App() {
   return (
