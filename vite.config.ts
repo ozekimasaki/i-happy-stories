@@ -24,6 +24,8 @@ export default defineConfig({
         path.resolve(__dirname, './src/services'),
         path.resolve(__dirname, './src/middleware'),
         path.resolve(__dirname, './src/worker.ts'),
+        path.resolve(__dirname, './src/pages'),
+        path.resolve(__dirname, './src/components'),
       ],
     },
   },

@@ -123,12 +123,20 @@ const StoryDetailPage: React.FC = () => {
           <div className="flex justify-between items-center mb-2">
             <h1 className="text-3xl font-bold text-stone-800">{story.title}</h1>
             {session && (
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200"
-              >
-                物語を削除
-              </button>
+              <div className="flex items-center gap-4">
+                <Link
+                  to={`/stories/${id}/edit`}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200"
+                >
+                  編集する
+                </Link>
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200"
+                >
+                  物語を削除
+                </button>
+              </div>
             )}
           </div>
           <p className="text-sm text-stone-500 mb-6">

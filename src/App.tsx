@@ -5,6 +5,7 @@ import SignupPage from './pages/SignupPage';
 import StoriesPage from './pages/StoriesPage';
 import StoryGenerationPage from './pages/StoryGenerationPage';
 import StoryDetailPage from './pages/StoryDetailPage';
+import StoryEditPage from './pages/StoryEditPage';
 import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -19,6 +20,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/stories/:id" element={<StoryDetailPage />} />
+          <Route path="/stories/:id/edit" element={<StoryEditPage />} />
           <Route path="/generate-story" element={<StoryGenerationPage />} />
         </Route>
       </Route>

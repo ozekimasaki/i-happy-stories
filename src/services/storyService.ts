@@ -243,3 +243,28 @@ export const deleteStory = async (c: Context, storyId: number, userId: string) =
 
   return { message: '物語を削除しました。' };
 };
+
+export const updateStory = async (c: Context, storyId: number, userId: string, data: { title: string; content: string }) => {
+  const supabase = getSupabase(c);
+
+  const { data: updatedStory, error } = await supabase
+    .from('stories')
+    .update({
+      title: data.title,
+      content: data.content,
+    })
+    .eq('id', storyId)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating story ${storyId}:`, error);
+    if (error.code === 'PGRST116') {
+      throw new Error('更新対象の物語が見つからないか、更新する権限がありません。');
+    }
+    throw new Error(`物語の更新に失敗しました: ${error.message}`);
+  }
+
+  return updatedStory;
+};

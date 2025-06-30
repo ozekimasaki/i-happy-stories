@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../../middleware/auth';
-import { createStory, getStoriesByUserId, getStoryById, deleteStory } from '../../services/storyService';
+import { createStory, getStoriesByUserId, getStoryById, deleteStory, updateStory } from '../../services/storyService';
 import { createIllustration } from '../../services/illustrationService';
-import { storyRequestSchema } from '../../schemas/storySchema';
+import { storyRequestSchema, storyUpdateSchema } from '../../schemas/storySchema';
 
 const posts = new Hono();
 
@@ -88,9 +88,40 @@ posts.post('/', authMiddleware, async (c) => {
 });
 
 // 投稿を更新
-posts.put('/:id', (c) => {
-    const { id } = c.req.param();
-    return c.json({ message: `投稿(ID:${id})を更新しました` });
+posts.put('/:id', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const id = parseInt(c.req.param('id'), 10);
+
+  if (!user) {
+    return c.json({ error: '認証が必要です' }, 401);
+  }
+  if (Number.isNaN(id)) {
+    return c.json({ error: 'IDの形式が正しくありません' }, 400);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const validationResult = storyUpdateSchema.safeParse(body);
+
+  if (!validationResult.success) {
+    const formattedErrors = validationResult.error.issues.map(
+      (issue) => `${issue.path.join('.')}: ${issue.message}`
+    );
+    return c.json({ errors: formattedErrors }, 400);
+  }
+
+  try {
+    const updatedStory = await updateStory(c, id, user.id, validationResult.data);
+    return c.json({ story: updatedStory, message: '物語を更新しました' });
+  } catch (error: unknown) {
+    console.error(`Error updating story ${id}:`, error);
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+    
+    if (errorMessage.includes('見つからないか') || errorMessage.includes('権限がありません')) {
+        return c.json({ error: errorMessage }, 404);
+    }
+    
+    return c.json({ error: '物語の更新中にサーバーエラーが発生しました' }, 500);
+  }
 });
 
 // 投稿を削除
