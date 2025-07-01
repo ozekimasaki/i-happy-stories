@@ -33,7 +33,7 @@ export const createIllustration = async (c: Context, storyId: number, prompt: st
     // 1. イラストを生成
     const genAI = getGeminiClient(c);
     const response = await genAI.models.generateImages({
-        model: 'imagen-4.0-generate-preview-06-06',
+        model: 'imagen-4.0-ultra-generate-preview-06-06',
         prompt: prompt,
         config: {
             numberOfImages: 1,
