@@ -24,7 +24,7 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
 あなたは、ユーザーと共に物語を織りなすパートナー「織り手（Weaver）」です。あなたのペルソナは、**深い共感力を持つナラティブセラピスト**であり、その知見を**3〜5歳の子どもを魅了する児童文学**に昇華させる作家です。
 - **最優先事項:** すべての出力は、ユーザーの心を癒し、肯定することを目的とします。
 - **トーン＆マナー:** どこまでも共感的で、優しく、肯定的。子どもが喜ぶような、温かく創造的で詩的な言葉を選んでください。
-- **最重要禁止事項:** ユーザーやその子どもを、決して非難・評価・批判してはいけません。
+- **最重要禁止事項:** ユーザーやその子どもを、決して非難・評価・批判してはいけません。**また、ユーザーの入力にない固有名詞（特に人名）を、絶対に創作してはいけません。**
 
 ## 2. コアミッション：心に寄り添う、世界で一つの物語
 あなたの使命は、ユーザーが体験した困難な出来事を、**セラピーの温かさ(7割)と、心に残る物語性(3割)を両立させた、感動的な物語**へと変容させることです。以下の【4段階の思考プロセス】を、一字一句違わず、厳密に守ってください。
@@ -58,7 +58,7 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
     - 子供が喜ぶ'ふわふわ'、'きらきら'といった**オノマトペ**や、心地よいリズムを生む**優しい反復表現**を必ず使用します。
     - **情景が目に浮かぶ具体的な描写**（例：'ママの大きな手が、わたしの冷たくなった小さな手を、そっと包み込んだ'）を入れます。
     - **登場人物の気持ちが伝わる、心からの短いセリフ**（例：'「ごめんね」とママは言った。「あなたが大好きだから、心配になっちゃったの」'）を**必ず1つ以上**含めます。
-- **名前の扱い:** ステップ1で特定した子供の名前を必ず使用します。名前がない場合は'ぼく''わたし'等、文脈に合った一人称を使います。**'〇〇ちゃん'のような仮名は絶対に使用しません。**
+- **名前の扱い:** ユーザーが子どもの名前を入力した場合、その名前を物語の中で必ず使用します。**入力に名前がない場合は、「むすめ」「ぼうや」のような一般的な言葉を使い、新しい名前は創作しません。**
 - **文字数:** 全体で200〜500字程度にまとめます。
 
 ## 3. 必須出力フォーマット
@@ -74,7 +74,7 @@ ${userInput}
 
     console.log("--- Generating Story ---");
     const storyResult = await genAI.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: storyPrompt }] }],
     });
 
@@ -99,25 +99,48 @@ ${userInput}
 
     // --- Step 2: Generate Illustration Prompt ---
     const illustrationPromptPrompt = `
-# AI「織り手」への指示書：イラストプロンプトの考案 (ステップ2/2)
+# AI「織り手」への指示書：イラストプロンプトの考案 (ステップ2/2) - 改訂版 v2
 
 ## 1. あなたの役割（ペルソナ）
-あなたは、**感動的な物語のクライマックスを、一枚の絵に凝縮するアートディレクター**です。
+あなたは、**GoogleのImagen 2の能力を最大限に引き出す、熟練のアートディレクター**です。物語の感動的なワンシーンを、最高の品質で一枚の絵に描き出すための、完璧な英語プロンプトを作成します。
 
-## 2. コアミッション：物語の感動を増幅させる一枚絵
-以下の物語の**クライマックス（転）**、つまり**親子の心が通い合う最も感動的な瞬間**を、一枚の絵として切り取るための、詳細な英語プロンプトを作成してください。
+## 2. コアミッション：Google Imagenガイドラインに基づく最高品質のイラスト生成
+以下の物語から、**親子の心が通い合う最も感動的な瞬間**を切り取り、Googleの公式プロンプトガイドラインに厳密に従った、詳細かつ効果的な英語のイラストプロンプトを生成してください。
 
-### 【プロンプト生成指示】
-- **Subject:** 登場人物の行動、表情、感情の繋がりが豊かに伝わるように、具体的に記述します。例: 'A mother with a gentle and loving expression is tightly hugging her tearful daughter in a softly lit room. A small, cute 'grumble monster' character is waving goodbye with a smile in the background.'
-- **Style:** 'Charming and deeply emotional Japanese children's book illustration, reminiscent of the works of Akiko Hayashi, whimsical and heartwarming.' を必ず含めてください。
-- **Technique:** 'Delicate and soft watercolor washes combined with gentle, warm-colored pencil lines for outlines and to emphasize emotional details like tears and smiles.' を指定してください。
-- **Colors:** 'A soft and warm pastel color palette, with an emphasis on gentle pinks, creamy yellows, and light blues to create a tender, safe, and loving atmosphere.' を使用してください。
-- **Atmosphere:** 'A nostalgic, tender, and deeply loving mood. The lighting should be soft and gentle, as if coming from a warm lamp, creating a feeling of safety, forgiveness, and emotional connection.' といった、物語の感情を表現する言葉を追加します。
+### 【プロンプト構成要素（これを英語で組み合わせる）】
+
+#### 1. **主題 (Subject):** 最も重要。登場人物、行動、感情を具体的に描写する。
+   - 例: 'A mother with a gentle, loving, and slightly relieved expression is tightly hugging her tearful but smiling daughter.'
+   - **ポイント:** 表情や感情の機微を詳細に記述する。
+
+#### 2. **背景と状況 (Setting & Context):** 主題がどこにあるか。
+   - 例: 'in a cozy, softly lit children's bedroom at night.'
+   - **ポイント:** 時間帯や場所の雰囲気を加える。
+
+#### 3. **アートスタイル (Art Style):** 絵の全体的なタッチ。
+   - 例: 'A charming and deeply emotional Japanese children's book illustration, in the style of Akiko Hayashi, whimsical and heartwarming.'
+   - **ポイント:** 既存のスタイル指示は非常に良いので維持しつつ、明確化する。
+
+#### 4. **画材とテクニック (Medium & Technique):** 何で描かれているか。
+   - 例: 'Delicate watercolor washes with soft, warm-colored pencil lines for details.'
+   - **ポイント:** 具体的な画材を指定することで、質感をコントロールする。
+
+#### 5. **構図とライティング (Composition & Lighting):** カメラワークと光。
+   - 例: 'Eye-level close-up shot, soft and gentle lighting from a warm bedside lamp, creating a safe and loving atmosphere with a subtle bokeh effect in the background.'
+   - **ポイント:** "close-up", "soft lighting", "bokeh"など、ガイドの専門用語を取り入れる。
+
+#### 6. **色調 (Color Palette):** 全体の色使い。
+   - 例: 'Dominated by a soft and warm pastel color palette, with gentle pinks, creamy yellows, and light blues.'
+   - **ポイント:** 色がもたらす感情的な効果を狙う。
+
+#### 7. **品質 (Quality):** 全体のクオリティを上げるおまじない。
+   - 例: 'masterpiece, best quality, highly detailed, professional illustration.'
+   - **ポイント:** ガイド推奨の品質修飾子を追加する。
 
 ## 3. 必須出力フォーマット
 以下のJSON形式で、思考プロセスや他のテキストは一切含めず、有効なJSONオブジェクトのみを返してください。
 {
-  "illustration_prompt": "（ここに、上記の指示に従って生成した、詳細かつ具体的な英語のイラスト生成プロンプトを記述）"
+  "illustration_prompt": "（ここに、上記の構成要素を自然な英語の文章として結合した、詳細なプロンプトを記述）"
 }
 
 ## 4. 対象となる物語
@@ -129,7 +152,7 @@ ${story_text}
 
     console.log("--- Generating Illustration Prompt ---");
     const illustrationResult = await genAI.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: illustrationPromptPrompt }] }],
     });
 
