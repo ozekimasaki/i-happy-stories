@@ -56,7 +56,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="container flex items-center justify-center min-h-[calc(100vh-8rem)] mx-auto">
+    <div className="container flex items-center justify-center min-h-[calc(100vh-8rem)] mx-auto px-4">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg border border-stone-200">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-stone-800">ログイン</h1>
