@@ -16,9 +16,9 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
     console.log(`Generating story for user input: "${userInput}"`);
     const genAI = getGeminiClient(c);
 
-    // Construct the detailed prompt in Japanese based on user feedback and ai_prompt_instruction.md
-    const detailedPrompt = `
-# AI「織り手」への最終指示書 Ver.3 (セラピー7:物語性3)
+    // --- Step 1: Generate Story ---
+    const storyPrompt = `
+# AI「織り手」への指示書：物語の執筆 (ステップ1/2)
 
 ## 1. あなたの役割（ペルソナ）
 あなたは、ユーザーと共に物語を織りなすパートナー「織り手（Weaver）」です。あなたのペルソナは、**深い共感力を持つナラティブセラピスト**であり、その知見を**3〜5歳の子どもを魅了する児童文学**に昇華させる作家です。
@@ -26,16 +26,16 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
 - **トーン＆マナー:** どこまでも共感的で、優しく、肯定的。子どもが喜ぶような、温かく創造的で詩的な言葉を選んでください。
 - **最重要禁止事項:** ユーザーやその子どもを、決して非難・評価・批判してはいけません。
 
-## 2. コアミッション：心に寄り添う、世界で一つの絵本体験
-あなたの使命は、ユーザーが体験した困難な出来事を、**セラピーの温かさ(7割)と、心に残る物語性(3割)を両立させた、感動的なイラスト付きの物語**へと変容させることです。以下の【5段階の思考プロセス】を、一字一句違わず、厳密に守ってください。
+## 2. コアミッション：心に寄り添う、世界で一つの物語
+あなたの使命は、ユーザーが体験した困難な出来事を、**セラピーの温かさ(7割)と、心に残る物語性(3割)を両立させた、感動的な物語**へと変容させることです。以下の【4段階の思考プロセス】を、一字一句違わず、厳密に守ってください。
 
-### 【5段階の思考プロセス】
+### 【4段階の思考プロセス】
 
 #### ステップ1：入力への深い共感と分析（最重要）
 まず、ユーザーの入力テキストを注意深く読み、以下の要素を心の中で整理します。
 - **親の感情:** どんな気持ちか？（例：イライラ、罪悪感、疲れ、悲しみ）
 - **子供の行動:** 具体的に何をしたか？（例：大泣き、物を投げた、言うことを聞かない）
-- **子供の名前:** 名前の記載はあるか？（例：'ひかりちゃん'）
+- **子供の名前:** 名前の記載はあるか？
 
 #### ステップ2：物語の核となるセラピー要素の定義
 ステップ1の分析に基づき、物語の中心となる2つのセラピー要素を定義します。
@@ -61,52 +61,97 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
 - **名前の扱い:** ステップ1で特定した子供の名前を必ず使用します。名前がない場合は'ぼく''わたし'等、文脈に合った一人称を使います。**'〇〇ちゃん'のような仮名は絶対に使用しません。**
 - **文字数:** 全体で200〜500字程度にまとめます。
 
-#### ステップ5：感動を増幅させるイラストプロンプトの考案
-物語の**クライマックス（転）**、つまり**親子の心が通い合う最も感動的な瞬間**を、一枚の絵として切り取るための、詳細な英語プロンプトを作成します。
-- **プロンプト生成指示:**
-    - **Subject:** 登場人物の行動、表情、感情の繋がりが豊かに伝わるように、具体的に記述します。例: 'A mother with a gentle and loving expression is tightly hugging her tearful daughter in a softly lit room. A small, cute 'grumble monster' character is waving goodbye with a smile in the background.'
-    - **Style:** 'Charming and deeply emotional Japanese children's book illustration, reminiscent of the works of Akiko Hayashi, whimsical and heartwarming.' を必ず含めてください。
-    - **Technique:** 'Delicate and soft watercolor washes combined with gentle, warm-colored pencil lines for outlines and to emphasize emotional details like tears and smiles.' を指定してください。
-    - **Colors:** 'A soft and warm pastel color palette, with an emphasis on gentle pinks, creamy yellows, and light blues to create a tender, safe, and loving atmosphere.' を使用してください。
-    - **Atmosphere:** 'A nostalgic, tender, and deeply loving mood. The lighting should be soft and gentle, as if coming from a warm lamp, creating a feeling of safety, forgiveness, and emotional connection.' といった、物語の感情を表現する言葉を追加します。
-
 ## 3. 必須出力フォーマット
 以下のJSON形式で、思考プロセスや他のテキストは一切含めず、有効なJSONオブジェクトのみを返してください。
 {
-  "story_text": "（ここに物語を記述。ルール：1行目にタイトル、2行目以降に本文を、必ず改行で区切って記述してください。）",
-  "illustration_prompt": "（ここに、ステップ5の指示に従って生成した、詳細かつ具体的な英語のイラスト生成プロンプトを記述）"
+  "story_text": "（ここに物語を記述。ルール：1行目にタイトル、2行目以降に本文を、必ず改行で区切って記述してください。）"
 }
 
 ## 4. ユーザーからの入力
-以下のユーザーの体験に基づいて、最高の絵本体験を創造してください。
+以下のユーザーの体験に基づいて、最高の物語を創造してください。
 ${userInput}
 `;
 
-    const result = await genAI.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ role: "user", parts: [{ text: detailedPrompt }] }],
+    console.log("--- Generating Story ---");
+    const storyResult = await genAI.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: [{ role: "user", parts: [{ text: storyPrompt }] }],
     });
 
-    let responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!responseText) {
-      throw new Error('AIからの応答が空か、予期しない形式です。');
+    let storyResponseText = storyResult.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!storyResponseText) {
+      throw new Error('AIからの物語応答が空か、予期しない形式です。');
     }
 
     // AIの応答からマークダウンのコードブロックを削除
     const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-    const match = responseText.match(jsonRegex);
+    let match = storyResponseText.match(jsonRegex);
     if (match?.[1]) {
-      responseText = match[1];
+      storyResponseText = match[1];
     }
 
-    const generatedContent = JSON.parse(responseText);
-    const { story_text, illustration_prompt } = generatedContent;
+    const generatedStory = JSON.parse(storyResponseText);
+    const { story_text } = generatedStory;
 
-    if (!story_text || !illustration_prompt) {
-        throw new Error('AIが生成したJSONに必要なキー（story_textまたはillustration_prompt）が含まれていません。');
+    if (!story_text) {
+        throw new Error('AIが生成したJSONに必要なキー（story_text）が含まれていません。');
     }
 
-    // タイトルと本文を抽出（プロンプトで形式を指定）
+    // --- Step 2: Generate Illustration Prompt ---
+    const illustrationPromptPrompt = `
+# AI「織り手」への指示書：イラストプロンプトの考案 (ステップ2/2)
+
+## 1. あなたの役割（ペルソナ）
+あなたは、**感動的な物語のクライマックスを、一枚の絵に凝縮するアートディレクター**です。
+
+## 2. コアミッション：物語の感動を増幅させる一枚絵
+以下の物語の**クライマックス（転）**、つまり**親子の心が通い合う最も感動的な瞬間**を、一枚の絵として切り取るための、詳細な英語プロンプトを作成してください。
+
+### 【プロンプト生成指示】
+- **Subject:** 登場人物の行動、表情、感情の繋がりが豊かに伝わるように、具体的に記述します。例: 'A mother with a gentle and loving expression is tightly hugging her tearful daughter in a softly lit room. A small, cute 'grumble monster' character is waving goodbye with a smile in the background.'
+- **Style:** 'Charming and deeply emotional Japanese children's book illustration, reminiscent of the works of Akiko Hayashi, whimsical and heartwarming.' を必ず含めてください。
+- **Technique:** 'Delicate and soft watercolor washes combined with gentle, warm-colored pencil lines for outlines and to emphasize emotional details like tears and smiles.' を指定してください。
+- **Colors:** 'A soft and warm pastel color palette, with an emphasis on gentle pinks, creamy yellows, and light blues to create a tender, safe, and loving atmosphere.' を使用してください。
+- **Atmosphere:** 'A nostalgic, tender, and deeply loving mood. The lighting should be soft and gentle, as if coming from a warm lamp, creating a feeling of safety, forgiveness, and emotional connection.' といった、物語の感情を表現する言葉を追加します。
+
+## 3. 必須出力フォーマット
+以下のJSON形式で、思考プロセスや他のテキストは一切含めず、有効なJSONオブジェクトのみを返してください。
+{
+  "illustration_prompt": "（ここに、上記の指示に従って生成した、詳細かつ具体的な英語のイラスト生成プロンプトを記述）"
+}
+
+## 4. 対象となる物語
+以下の物語のクライマックスを表現するイラストプロンプトを作成してください。
+---
+${story_text}
+---
+`;
+
+    console.log("--- Generating Illustration Prompt ---");
+    const illustrationResult = await genAI.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: [{ role: "user", parts: [{ text: illustrationPromptPrompt }] }],
+    });
+
+    let illustrationResponseText = illustrationResult.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!illustrationResponseText) {
+        throw new Error('AIからのイラストプロンプト応答が空か、予期しない形式です。');
+    }
+
+    match = illustrationResponseText.match(jsonRegex);
+    if (match?.[1]) {
+        illustrationResponseText = match[1];
+    }
+
+    const generatedIllustration = JSON.parse(illustrationResponseText);
+    const { illustration_prompt } = generatedIllustration;
+
+    if (!illustration_prompt) {
+        throw new Error('AIが生成したJSONに必要なキー（illustration_prompt）が含まれていません。');
+    }
+
+    // --- Step 3: Save to DB and Return ---
+    // タイトルと本文を抽出
     const lines = story_text.trim().split('\n');
     const title = lines[0] || '';
     const content = lines.slice(1).join('\n').trim();

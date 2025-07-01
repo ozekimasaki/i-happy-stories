@@ -59,10 +59,10 @@ const StoryGenerationPage: React.FC = () => {
         
         <div className="space-y-4">
           <div>
-            <label htmlFor="prompt" className="block text-sm font-medium text-stone-700">プロンプト</label>
+            <label htmlFor="prompt" className="block text-sm font-medium text-stone-700">作りたい物語のテーマ</label>
             <textarea
               id="prompt"
-              placeholder="例：「魔法の森に住む、歌うのが好きな小さなキツネの冒険」"
+              placeholder="例：「魔法の森に住む、歌うのが好きな小さなキツネの冒険」 「今日は娘の誕生日、娘は大好物のショートケーキを美味しそうに食べていた。」"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               className="mt-1 block w-full px-3 py-2 bg-white border border-stone-300 rounded-md shadow-sm placeholder-stone-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm h-32"
