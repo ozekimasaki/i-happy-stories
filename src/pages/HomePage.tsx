@@ -71,7 +71,7 @@ const HomePage: React.FC = () => {
                             <p className="text-lg text-stone-700">おかえりなさい, {
                                 user ?. email
                             }さん!</p>
-                            <Link to="/stories" className="bg-amber-600 text-white hover:bg-amber-700 py-2 px-4 rounded inline-block">あなたの物語へ</Link>
+                                                                                    <Link to="/stories/new" className="bg-amber-600 text-white hover:bg-amber-700 py-2 px-4 rounded inline-block">新たな物語を紡ぐ</Link>
                         </div>
                     ) : (
                         <div className="space-x-4">
