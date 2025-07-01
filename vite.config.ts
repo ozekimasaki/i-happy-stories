@@ -18,16 +18,7 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-    watch: {
-      ignored: [
-        path.resolve(__dirname, './src/routes'),
-        path.resolve(__dirname, './src/services'),
-        path.resolve(__dirname, './src/middleware'),
-        path.resolve(__dirname, './src/worker.ts'),
-        path.resolve(__dirname, './src/pages'),
-        path.resolve(__dirname, './src/components'),
-      ],
-    },
+
   },
   build: {
     manifest: true,
