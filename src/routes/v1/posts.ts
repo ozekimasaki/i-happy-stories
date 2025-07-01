@@ -1,10 +1,25 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../../middleware/auth';
-import { createStory, getStoriesByUserId, getStoryById, deleteStory, updateStory } from '../../services/storyService';
+import { createStory, getStoriesByUserId, getStoryById, deleteStory, updateStory, getLatestStories } from '../../services/storyService';
 import { createIllustration } from '../../services/illustrationService';
 import { storyRequestSchema, storyUpdateSchema } from '../../schemas/storySchema';
 
 const posts = new Hono();
+
+// ログインユーザーの最新の投稿3件を取得
+posts.get('/latest', authMiddleware, async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return c.json({ error: '認証が必要です' }, 401);
+  }
+  try {
+        const stories = await getLatestStories(c, user.id);
+    return c.json({ stories: stories, message: '最新の物語を3件取得しました' });
+  } catch (error) {
+    console.error('Error fetching latest stories:', error);
+    return c.json({ error: '最新の物語の取得に失敗しました' }, 500);
+  }
+});
 
 // 投稿一覧を取得
 posts.get('/', authMiddleware, async (c) => {

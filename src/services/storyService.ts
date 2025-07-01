@@ -235,6 +235,47 @@ export const getStoryById = async (c: Context, storyId: number, userId:string) =
   return data;
 };
 
+export const getLatestStories = async (c: Context, userId: string) => {
+  const supabase = getSupabase(c);
+
+  try {
+    const { data, error } = await supabase
+      .from('stories')
+      .select(`
+        id,
+        title,
+        created_at,
+        illustrations (
+          image_url
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (error) {
+      throw error;
+    }
+
+    // Add a top-level cover_image_url for convenience
+    const storiesWithCover = data?.map(story => {
+      const cover_image_url = story.illustrations && story.illustrations.length > 0 
+        ? story.illustrations[0].image_url 
+        : null;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { illustrations, ...rest } = story;
+      return { ...rest, cover_image_url };
+    });
+
+    return storiesWithCover;
+
+  } catch (error: unknown) {
+    console.error('Error fetching latest stories:', error);
+    const message = error instanceof Error ? error.message : '不明なエラーが発生しました';
+    throw new Error(`最新の物語の取得に失敗しました: ${message}`);
+  }
+};
+
 export const deleteStory = async (c: Context, storyId: number, userId: string) => {
   const supabase = getSupabase(c);
 

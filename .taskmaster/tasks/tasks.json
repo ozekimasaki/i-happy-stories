@@ -1634,11 +1634,79 @@
             "parentTaskId": 77
           }
         ]
+      },
+      {
+        "id": 78,
+        "title": "Display Latest Stories on Homepage",
+        "description": "Implement a backend API to retrieve the 3 most recent stories and integrate this API into the frontend homepage to display them.",
+        "details": "Backend (Hono): Create a new GET endpoint (e.g., /api/stories/latest) that queries the 'stories' table in Supabase. Order the results by 'created_at' in descending order and limit the results to 3. Ensure the API returns necessary fields for display such as 'id', 'title', 'illustration_url', and 'created_at'. Implement robust error handling and logging as per Task 75. Consider if these stories should be publicly accessible or only for logged-in users; for a homepage, public access is generally preferred. Frontend (Next.js/React): On the main homepage component (e.g., app/page.tsx), fetch data from the new /api/stories/latest endpoint. Display the retrieved stories in a dedicated section using appropriate UI components (e.g., shadcn/ui Card components) to present each story with its title and illustration. Implement loading states and error display using Toast components as per Task 75. Ensure responsive design for various screen sizes.",
+        "testStrategy": "Backend: Use a tool like Postman or curl to call the /api/stories/latest endpoint. Verify that it returns exactly 3 stories, ordered by creation date (newest first). Test with an empty database or fewer than 3 stories to ensure correct behavior (e.g., returns 0, 1, or 2 stories). Verify error handling by simulating database errors or invalid requests. Frontend: Navigate to the homepage in a browser. Verify that the 'Latest Stories' section appears and displays 3 story cards/previews with correct titles and illustrations. Check responsiveness across different screen sizes. Simulate API failure (e.g., by temporarily disabling the backend endpoint) and verify that an appropriate error message is displayed on the UI.",
+        "status": "done",
+        "dependencies": [
+          75,
+          77
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Hono API to Fetch Latest 3 Stories",
+            "description": "Create a new GET endpoint `/api/stories/latest` in the Hono backend. This endpoint should query the `stories` table in Supabase, order results by `created_at` in descending order, and limit the results to 3. The API must return `id`, `title`, `illustration_url`, and `created_at` for each story.",
+            "dependencies": [],
+            "details": "Use the Supabase client to perform the database query. Ensure the response format is a JSON array of story objects. This endpoint should be publicly accessible for the homepage display.",
+            "status": "done",
+            "testStrategy": "Use Postman, Insomnia, or `curl` to hit the `/api/stories/latest` endpoint. Verify that exactly 3 stories are returned, ordered by `created_at` descending, and contain the required fields (`id`, `title`, `illustration_url`, `created_at`)."
+          },
+          {
+            "id": 2,
+            "title": "Add Robust Error Handling and Logging to Latest Stories API",
+            "description": "Enhance the `/api/stories/latest` endpoint with comprehensive error handling for database query failures, network issues, or unexpected data formats from Supabase. Implement logging for successful requests and errors as per Task 75 guidelines.",
+            "dependencies": [
+              1
+            ],
+            "details": "Wrap the Supabase query logic in a `try-catch` block. Return appropriate HTTP status codes (e.g., 500 for server errors, 200 with an empty array if no stories are found). Log errors with relevant context (e.g., error message, stack trace) and successful requests.",
+            "status": "done",
+            "testStrategy": "Simulate database errors (e.g., by temporarily invalidating Supabase credentials or querying a non-existent column) to verify that the API returns an appropriate error response (e.g., 500 status code) and logs the error correctly. Verify successful requests are logged."
+          },
+          {
+            "id": 3,
+            "title": "Implement Frontend Data Fetching and Loading/Error States",
+            "description": "In the `app/page.tsx` component (or equivalent homepage component), implement logic to fetch data from the new `/api/stories/latest` endpoint. Manage loading states (e.g., `isLoading` boolean) and error states (e.g., `isError`, `errorMessage`).",
+            "dependencies": [
+              2
+            ],
+            "details": "Use React's `useEffect` and `useState` hooks for data fetching and state management. Implement a loading indicator (e.g., a skeleton loader or spinner) that displays while data is being fetched. If an error occurs during fetching, display an error message using a shadcn/ui Toast component as per Task 75.",
+            "status": "done",
+            "testStrategy": "Manually test by refreshing the homepage to observe the loading state. Temporarily modify the backend API to return an error to verify the error message and Toast component are displayed correctly. Verify that no error is shown on successful fetch."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Fetched Stories into Homepage UI",
+            "description": "Display the successfully fetched latest stories on the homepage. Use shadcn/ui Card components (or similar appropriate UI components) to present each story, showing its `title` and `illustration_url`. Ensure the layout is clean and visually appealing.",
+            "dependencies": [
+              3
+            ],
+            "details": "Map over the `stories` array received from the API. For each story, render a `Card` component. Use the `illustration_url` for an `img` tag within the card and the `title` for the card's header or title section. Ensure images have appropriate `alt` text.",
+            "status": "done",
+            "testStrategy": "Verify that 3 stories are displayed on the homepage. Check that each story card correctly shows its title and illustration. Ensure images load without errors and are appropriately sized within the cards."
+          },
+          {
+            "id": 5,
+            "title": "Ensure Responsive Design and Apply Final UI Polish",
+            "description": "Optimize the display of the latest stories section for various screen sizes (mobile, tablet, desktop). Apply any necessary final styling adjustments to ensure a polished and consistent user experience across devices.",
+            "dependencies": [
+              4
+            ],
+            "details": "Use CSS media queries or Tailwind CSS utility classes (e.g., `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`) to adjust the layout of the story cards based on viewport width. Ensure images scale correctly, text remains readable, and there is appropriate spacing and alignment.",
+            "status": "done",
+            "testStrategy": "Test the homepage on different browser widths or using browser developer tools' responsive mode. Verify that the story cards adapt gracefully to smaller screens (e.g., stacking vertically) and larger screens (e.g., displaying in a grid). Check for any visual glitches or misalignments."
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-06-29T14:47:10.895Z",
+      "updated": "2025-07-01T00:41:01.737Z",
       "description": "Tasks for master context"
     }
   }
