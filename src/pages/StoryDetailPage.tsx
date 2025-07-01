@@ -124,10 +124,10 @@ const StoryDetailPage: React.FC = () => {
           </div>
         )}
         <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6 sm:p-8">
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
             <h1 className="text-3xl sm:text-4xl font-bold text-stone-800 font-serif">{story.title}</h1>
             {isOwner && (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-shrink-0">
                 <Link
                   to={`/stories/edit/${story.id}`}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
