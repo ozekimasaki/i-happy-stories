@@ -16,16 +16,16 @@ const Header: React.FC = () => {
     <header className="bg-stone-50 border-b border-stone-200">
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-stone-800">
-          ものがたりWeavers
+          物語Weavers
         </Link>
         <nav>
           {session ? (
             <div className="flex items-center gap-4">
               <Link to="/stories" className="text-stone-600 hover:text-stone-800">
-                マイストーリー
+                物語一覧
               </Link>
               <Link to="/generate-story">
-                <button className="bg-amber-600 text-white hover:bg-amber-700 py-2 px-4 rounded">物語を作成</button>
+                <button className="bg-amber-600 text-white hover:bg-amber-700 py-2 px-4 rounded">物語を作る</button>
               </Link>
               <button className="bg-transparent text-stone-600 hover:text-stone-800 py-2 px-4 rounded" onClick={handleLogout}>
                 ログアウト

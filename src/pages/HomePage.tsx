@@ -8,8 +8,8 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="container mx-auto text-center py-20">
-      <h1 className="text-4xl font-bold mb-4 text-stone-800">モノガタリウィーバーズへようこそ</h1>
-      <p className="text-xl text-stone-500 mb-8">AIの力であなただけの物語を紡ぎましょう。</p>
+      <h1 className="text-4xl font-bold mb-4 text-stone-800">物語Weaversへようこそ</h1>
+      <p className="text-xl text-stone-500 mb-8">あなただけの物語を紡ぎましょう。</p>
       <div>
         {isAuthenticated ? (
           <div className="space-y-4">
