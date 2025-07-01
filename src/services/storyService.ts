@@ -210,15 +210,8 @@ export const getStoriesByUserId = async (c: Context, userId: string) => {
   const { data, error } = await supabase
     .from('stories')
     .select(`
-      id,
-      title,
-      content,
-      created_at,
-      illustrations (
-        id,
-        image_url,
-        prompt
-      )
+      id, title, content, created_at, is_public, published_at,
+      illustrations ( id, image_url, prompt )
     `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
@@ -231,7 +224,7 @@ export const getStoriesByUserId = async (c: Context, userId: string) => {
   return data;
 };
 
-export const getStoryById = async (c: Context, storyId: number, userId:string) => {
+export const getStoryById = async (c: Context, storyId: number) => {
   const supabase = getSupabase(c);
   const { data, error } = await supabase
     .from('stories')
@@ -240,6 +233,9 @@ export const getStoryById = async (c: Context, storyId: number, userId:string) =
       title,
       content,
       created_at,
+      is_public,
+      published_at,
+      user_id,
       illustrations (
         id,
         image_url,
@@ -247,11 +243,13 @@ export const getStoryById = async (c: Context, storyId: number, userId:string) =
       )
     `)
     .eq('id', storyId)
-    .eq('user_id', userId)
     .single();
 
   if (error) {
-    console.error(`Error fetching story ${storyId} from Supabase:`, error);
+    console.error(`Error fetching story ${storyId}:`, error);
+    if (error.code === 'PGRST116') {
+      throw new Error('物語が見つかりません。');
+    }
     throw new Error(`物語の取得に失敗しました: ${error.message}`);
   }
 
@@ -375,6 +373,56 @@ export const deleteStory = async (c: Context, storyId: number, userId: string) =
   }
 
   return { message: '物語を削除しました。' };
+};
+
+export const publishStory = async (c: Context, storyId: number, userId: string) => {
+  const supabase = getSupabase(c);
+
+  const { data: publishedStory, error } = await supabase
+    .from('stories')
+    .update({
+      is_public: true,
+      published_at: new Date().toISOString(),
+    })
+    .eq('id', storyId)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error publishing story ${storyId}:`, error);
+    if (error.code === 'PGRST116') {
+      throw new Error('公開対象の物語が見つからないか、公開する権限がありません。');
+    }
+    throw new Error(`物語の公開に失敗しました: ${error.message}`);
+  }
+
+  return publishedStory;
+};
+
+export const unpublishStory = async (c: Context, storyId: number, userId: string) => {
+  const supabase = getSupabase(c);
+
+  const { data: unpublishedStory, error } = await supabase
+    .from('stories')
+    .update({
+      is_public: false,
+      published_at: null,
+    })
+    .eq('id', storyId)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error unpublishing story ${storyId}:`, error);
+    if (error.code === 'PGRST116') {
+      throw new Error('非公開対象の物語が見つからないか、操作する権限がありません。');
+    }
+    throw new Error(`物語の非公開に失敗しました: ${error.message}`);
+  }
+
+  return unpublishedStory;
 };
 
 export const updateStory = async (c: Context, storyId: number, userId: string, data: { title: string; content: string }) => {

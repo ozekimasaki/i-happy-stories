@@ -2,19 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import type { Story } from 'types/hono';
 
 
-interface Story {
-  id: number;
-  title: string;
-  content: string;
-  created_at: string;
-  illustrations: {
-    id: number;
-    image_url: string;
-    prompt: string;
-  }[];
-}
+
 
 const StoriesPage: React.FC = () => {
   const [stories, setStories] = useState<Story[]>([]);
@@ -82,7 +73,18 @@ const StoriesPage: React.FC = () => {
             <Link to={`/stories/${story.id}`} key={story.id} className="block hover:no-underline group">
               <div className="h-full flex flex-col bg-white border border-stone-200 rounded-lg group-hover:border-amber-400 transition-colors duration-200 overflow-hidden">
                 <div className="p-4">
-                  <h2 className="text-lg font-bold truncate text-stone-800">{story.title}</h2>
+                  <div className="flex justify-between items-center gap-2">
+                    <h2 className="text-lg font-bold truncate text-stone-800 flex-1">{story.title}</h2>
+                    {story.is_public && (
+                      <Link 
+                        to={`/stories/${story.id}`} 
+                        onClick={(e) => e.stopPropagation()} 
+                        className="text-xs bg-sky-100 text-sky-800 px-2 py-1 rounded-full hover:bg-sky-200 transition-colors whitespace-nowrap"
+                      >
+                        公開中
+                      </Link>
+                    )}
+                  </div>
                 </div>
                 <div className="px-4 pb-4 flex-grow">
                   {story.illustrations && story.illustrations.length > 0 && (

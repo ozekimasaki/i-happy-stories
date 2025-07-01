@@ -48,7 +48,8 @@ dev-debug.log
 *.sw?
 # OS specific
 
+bun.lockb 
+
 # Task files
 # tasks.json
-# tasks/
-bun.lockb 
+# tasks/ 

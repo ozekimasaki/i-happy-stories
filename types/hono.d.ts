@@ -12,6 +12,13 @@ export type Story = {
   title: string;
   content: string;
   created_at: string;
+  is_public: boolean;
+  published_at: string | null;
+  illustrations: {
+    id: number;
+    image_url: string;
+    prompt: string;
+  }[];
 };
 
 export type Illustration = {

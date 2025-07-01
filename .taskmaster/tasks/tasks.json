@@ -1702,11 +1702,350 @@
             "testStrategy": "Test the homepage on different browser widths or using browser developer tools' responsive mode. Verify that the story cards adapt gracefully to smaller screens (e.g., stacking vertically) and larger screens (e.g., displaying in a grid). Check for any visual glitches or misalignments."
           }
         ]
+      },
+      {
+        "id": 79,
+        "title": "Project Initialization and Core Structure Setup",
+        "description": "Initialize the project with Vite for the frontend and Hono for the backend, establishing the specified directory structure (`functions/`, `src/`, `public/`). Configure `package.json` for monorepo-like management.",
+        "details": "Use `npm create vite@latest` for React/TypeScript frontend. Manually create `functions/api/[[path]].ts` for Hono. Ensure `index.html` is at the root. Set up `tsconfig.json` for both frontend and backend. Install core dependencies: `react`, `react-dom`, `hono`, `vite`, `typescript`.",
+        "testStrategy": "Verify project structure matches PRD. Run `npm install` successfully. Confirm basic Vite and Hono setup by creating a minimal 'Hello World' endpoint in Hono and displaying it in React.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 80,
+        "title": "Local Development Environment Configuration",
+        "description": "Configure the local development environment to run Vite (frontend) and Hono (backend) concurrently using `wrangler` and `vite.config.ts` proxy settings.",
+        "details": "Install `wrangler` and `concurrently`. Add scripts to `package.json` for `dev:frontend`, `dev:backend`, and `dev` (using `concurrently`). Configure `vite.config.ts` to proxy `/api/*` requests to the `wrangler` development server (e.g., `http://localhost:8787`). Example `vite.config.ts` proxy: `{ '/api': { target: 'http://localhost:8787', changeOrigin: true } }`.",
+        "testStrategy": "Run `npm run dev`. Access the frontend in the browser. Make a test API call from the frontend (e.g., to `/api/health`) and verify it successfully reaches the Hono backend and returns a response.",
+        "priority": "high",
+        "dependencies": [
+          79
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 81,
+        "title": "Cloudflare Pages/Functions Deployment Pipeline Setup",
+        "description": "Set up the Cloudflare Pages and Functions deployment pipeline, triggered by `git push`.",
+        "details": "Connect the GitHub repository to Cloudflare Pages. Configure build settings: Build command `npm run build` (or similar), Build output directory `dist` (Vite default). For Functions, ensure Cloudflare Pages automatically detects the `functions` directory. Verify `wrangler.toml` is correctly configured if needed, though Pages Functions often work out-of-the-box with the `functions` directory.",
+        "testStrategy": "Perform a `git push` to a test branch. Monitor Cloudflare Pages dashboard to ensure successful build and deployment of both the static SPA and the Pages Functions. Access the deployed URL and verify the application loads and a test API endpoint is reachable.",
+        "priority": "high",
+        "dependencies": [
+          79,
+          80
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 82,
+        "title": "Environment Variable Management Setup",
+        "description": "Establish a robust environment variable management system for both local development and production deployments.",
+        "details": "For frontend, use `.env` with `VITE_` prefix (e.g., `VITE_SUPABASE_URL`). For backend, use `.dev.vars` for local development and Cloudflare Pages console for production. Document all required environment variables (e.g., Supabase keys, Gemini API key). Ensure `.env` and `.dev.vars` are in `.gitignore`.",
+        "testStrategy": "Verify environment variables are correctly loaded in both frontend and backend during local development. Deploy a test change and confirm production environment variables are accessible within the Cloudflare Pages Functions and frontend build.",
+        "priority": "high",
+        "dependencies": [
+          79
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 83,
+        "title": "Supabase Project Setup and Initial Stories Schema",
+        "description": "Set up the Supabase project, including initial database schema for `stories` and configuring the Supabase client in the backend.",
+        "details": "Create a new Supabase project. Define the `stories` table with columns: `id` (PK, UUID), `user_id` (FK to `auth.users`), `title` (text), `story_text` (text), `illustration_url` (text), `created_at` (timestamp, default `now()`). Configure the Supabase client in the Hono backend using `createClient` from `@supabase/supabase-js`, utilizing environment variables for `SUPABASE_URL` and `SUPABASE_ANON_KEY`.",
+        "testStrategy": "Verify the `stories` table is created in Supabase. Write a simple backend Hono endpoint to insert a dummy record into `stories` and confirm successful insertion via Supabase Studio.",
+        "priority": "high",
+        "dependencies": [
+          82
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 84,
+        "title": "Backend Authentication: Signup Endpoint",
+        "description": "Implement the backend API endpoint for user signup (`/api/auth/signup`) using Hono and Supabase authentication.",
+        "details": "Create a Hono route `POST /api/auth/signup`. Use `zod` for request body validation (email, password). Call `supabase.auth.signUp({ email, password })`. Handle success (return JWT) and error responses. Ensure secure password handling (Supabase handles hashing).",
+        "testStrategy": "Use a tool like Postman or a simple `fetch` call to `POST /api/auth/signup` with valid and invalid credentials. Verify a new user is created in Supabase `auth.users` table and a JWT is returned on success. Test error cases (e.g., existing email, invalid format).",
+        "priority": "high",
+        "dependencies": [
+          83
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 85,
+        "title": "Backend Authentication: Login Endpoint",
+        "description": "Implement the backend API endpoint for user login (`/api/auth/login`) using Hono and Supabase authentication.",
+        "details": "Create a Hono route `POST /api/auth/login`. Use `zod` for request body validation (email, password). Call `supabase.auth.signInWithPassword({ email, password })`. Handle success (return JWT) and error responses (e.g., invalid credentials).",
+        "testStrategy": "Use Postman or `fetch` to `POST /api/auth/login` with valid and invalid credentials for a registered user. Verify a JWT is returned on success and appropriate error messages for failures.",
+        "priority": "high",
+        "dependencies": [
+          83
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 86,
+        "title": "Backend Authentication: JWT Validation Middleware",
+        "description": "Develop a Hono middleware to validate JWTs from the `Authorization` header for protected API endpoints.",
+        "details": "Create a Hono middleware function. Extract the JWT from the `Authorization: Bearer <token>` header. Use `supabase.auth.getUser(token)` to verify the token and retrieve user information. If valid, attach user data to the Hono context (e.g., `c.set('user', user)`). If invalid or missing, return a 401 Unauthorized response. Apply this middleware to protected routes.",
+        "testStrategy": "Create a dummy protected endpoint (e.g., `GET /api/protected`). Test accessing it without a token, with an invalid token, and with a valid token. Verify 401 responses for invalid/missing tokens and a successful response with user context for valid tokens.",
+        "priority": "high",
+        "dependencies": [
+          84,
+          85
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 87,
+        "title": "Frontend Authentication: Signup and Login Forms",
+        "description": "Develop the frontend React components for user signup and login forms, utilizing `shadcn/ui`.",
+        "details": "Create `SignupForm.tsx` and `LoginForm.tsx` components in `src/components`. Use `shadcn/ui` components (e.g., `Input`, `Button`, `Form`) for styling and structure. Implement form state management (e.g., `useState` or `react-hook-form`). Handle form submission to call the respective backend API endpoints (`/api/auth/signup`, `/api/auth/login`).",
+        "testStrategy": "Render the forms in the browser. Test input validation (e.g., empty fields, email format). Verify form submission triggers the correct API calls and handles loading states.",
+        "priority": "medium",
+        "dependencies": [
+          79
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 88,
+        "title": "Frontend Authentication: Token Storage and Global State Management",
+        "description": "Implement frontend state management for authentication (e.g., `Zustand` or `React Context`) and secure storage of JWTs in `localStorage`.",
+        "details": "Choose `Zustand` for global state. Create a store to hold `isAuthenticated` status, `user` object, and `accessToken`. Implement functions to `login` (store token, set auth state), `logout` (clear token, clear auth state). Store the JWT in `localStorage` upon successful login and retrieve it on app initialization. Ensure token is removed on logout.",
+        "testStrategy": "Perform a full signup/login flow. Verify `localStorage` contains the token. Refresh the page and confirm the user remains logged in. Perform logout and verify token is removed and state is reset. Test protected routes are inaccessible when logged out.",
+        "priority": "high",
+        "dependencies": [
+          87
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 89,
+        "title": "Frontend Authentication: API Request Interceptor",
+        "description": "Implement an API request interceptor in the frontend to automatically attach the `Authorization` header with the JWT for all authenticated requests.",
+        "details": "Create a utility function or a custom `fetch` wrapper. Before each API call to `/api/*`, retrieve the JWT from `localStorage` (or the Zustand store). If a token exists, add `Authorization: Bearer <token>` to the request headers. This ensures all protected backend calls are authenticated.",
+        "testStrategy": "Log in as a user. Make a request to a protected backend endpoint (e.g., `GET /api/protected`). Use browser developer tools to inspect network requests and confirm the `Authorization` header is correctly attached with the valid JWT.",
+        "priority": "high",
+        "dependencies": [
+          88
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 90,
+        "title": "Backend API: Story Creation Endpoint",
+        "description": "Implement the backend API endpoint for creating new stories (`POST /api/stories`), including `zod` validation for the request body.",
+        "details": "Create a Hono route `POST /api/stories`. Apply the authentication middleware (Task 86). Define a `zod` schema for the request body (e.g., `prompt: string`). Validate the incoming request. Initially, just save the `prompt` and `user_id` to the `stories` table. Return a success response with the new story ID.",
+        "testStrategy": "As an authenticated user, `POST` to `/api/stories` with valid and invalid prompts. Verify successful creation in Supabase for valid requests and `zod` validation errors for invalid ones. Test unauthenticated access returns 401.",
+        "priority": "high",
+        "dependencies": [
+          83,
+          86
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 91,
+        "title": "Backend: Integrate Google Gemini API for Story Generation",
+        "description": "Integrate the Google Gemini API into the backend to generate story text based on user prompts.",
+        "details": "Install the Google Gemini client library (e.g., `@google/generative-ai`). Configure the client with the `GEMINI_API_KEY` from environment variables. Within the `POST /api/stories` endpoint, after validation, call the Gemini API with the user's prompt to generate the `story_text`. Store the generated text in the `stories` table.",
+        "testStrategy": "Create a story via the frontend. Verify that the `story_text` field in the Supabase `stories` table is populated with AI-generated content. Test with various prompts to ensure reasonable story generation.",
+        "priority": "high",
+        "dependencies": [
+          82,
+          90
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 92,
+        "title": "Backend: Integrate Google Gemini API for Illustration Generation (R&D for Consistency)",
+        "description": "Integrate the Google Gemini API into the backend to generate illustrations based on the generated story text, focusing on character consistency.",
+        "details": "Within the `POST /api/stories` endpoint, after story generation, make another call to the Gemini API (or a specific image generation model if available via Gemini) to generate an image. The prompt for image generation should be derived from the generated story text, focusing on key characters and scenes. Store the resulting `illustration_url` (or base64 if directly returned and then uploaded to storage) in the `stories` table. Research and implement strategies for character consistency (e.g., consistent character descriptions in prompts).",
+        "testStrategy": "Generate multiple stories. Verify that `illustration_url` is populated for each. Manually inspect generated images for relevance to the story and observe any patterns or issues with character consistency across different generations.",
+        "priority": "high",
+        "dependencies": [
+          82,
+          91
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 93,
+        "title": "Backend: Persist Generated Story and Illustration to Supabase",
+        "description": "Ensure the generated story text and illustration URLs are correctly persisted to the Supabase `stories` table.",
+        "details": "Refine the `POST /api/stories` endpoint to save the `story_text` from Task 91 and `illustration_url` from Task 92 into the `stories` table, along with the `user_id` and initial `is_public` (false) and `published_at` (null).",
+        "testStrategy": "Generate a new story through the frontend. Check the Supabase `stories` table to confirm that `story_text`, `illustration_url`, `user_id`, `is_public` (false), and `published_at` (null) are all correctly saved for the new entry.",
+        "priority": "high",
+        "dependencies": [
+          91,
+          92
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 94,
+        "title": "Frontend: Story Input Form",
+        "description": "Develop the frontend React component for users to input their story prompts.",
+        "details": "Create a `StoryInputForm.tsx` component. Use `shadcn/ui` components for a text area or input field. Implement state to capture the user's prompt. On submission, call the `POST /api/stories` endpoint, ensuring the `Authorization` header is included by the interceptor.",
+        "testStrategy": "Render the input form. Enter a prompt and submit. Verify that the API call is made successfully and the backend receives the prompt. Check for loading indicators and error handling on the frontend.",
+        "priority": "medium",
+        "dependencies": [
+          89
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 95,
+        "title": "Frontend: Display Generated Story and Illustration",
+        "description": "Create frontend React components to display the generated story text and illustration.",
+        "details": "Develop a `StoryDisplay.tsx` component that receives `story_text` and `illustration_url` as props. Use `shadcn/ui` for layout and styling. Display the text clearly and render the image using an `<img>` tag. Implement basic loading and error states.",
+        "testStrategy": "After generating a story, verify that the generated text and image are correctly displayed on the frontend. Test with different story lengths and image aspect ratios to ensure proper rendering.",
+        "priority": "medium",
+        "dependencies": [
+          94
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 96,
+        "title": "Supabase Schema Update: Public Story Columns",
+        "description": "Update the Supabase `stories` table schema to include `is_public` (boolean, default: false) and `published_at` (timestamp) columns.",
+        "details": "Execute SQL migration or use Supabase Studio to add `is_public` (type `BOOLEAN`, default `FALSE`) and `published_at` (type `TIMESTAMP WITH TIME ZONE`, nullable) columns to the `stories` table.",
+        "testStrategy": "Verify the new columns exist in the `stories` table schema in Supabase Studio. Insert a new record and confirm `is_public` defaults to `false` and `published_at` is `NULL`.",
+        "priority": "high",
+        "dependencies": [
+          83
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 97,
+        "title": "Backend API: Publish Story Endpoint",
+        "description": "Implement the backend API endpoint (`PATCH /api/stories/:id/publish`) to update a story's `is_public` status and `published_at` timestamp.",
+        "details": "Create a Hono route `PATCH /api/stories/:id/publish`. Apply authentication middleware. Validate that the requesting user owns the story (or is an admin). Update the `stories` table: set `is_public` to `true` and `published_at` to `now()` for the specified story ID. Return the updated story data.",
+        "testStrategy": "As an authenticated user, `PATCH` to `/api/stories/:id/publish` for a story they own. Verify `is_public` becomes `true` and `published_at` is set in Supabase. Test with a story not owned by the user (expect 403 Forbidden) and with an invalid ID (expect 404 Not Found). Test unauthenticated access (expect 401).",
+        "priority": "high",
+        "dependencies": [
+          86,
+          96
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 98,
+        "title": "Frontend: 'Publish' Button and Public URL Modal",
+        "description": "Add a 'Publish' button to the frontend story detail page and implement a success modal displaying the public URL with a copy button.",
+        "details": "On the story detail page, add a button labeled '公開する' (Publish). On click, call `PATCH /api/stories/:id/publish`. Upon success, display a `shadcn/ui` Dialog/Modal. The modal should show the public URL (e.g., `https://<domain>/stories/public/:id`) and include a copy-to-clipboard button. Handle loading and error states.",
+        "testStrategy": "Generate a story. Navigate to its detail page. Click 'Publish'. Verify the API call is made, the modal appears with the correct URL, and the copy button functions. Confirm the story's public status is updated in Supabase.",
+        "priority": "medium",
+        "dependencies": [
+          97
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 99,
+        "title": "Frontend: Public Story View Page",
+        "description": "Create a new frontend route `/stories/public/:id` that displays a specific story and illustration without requiring user authentication.",
+        "details": "Configure `React Router` to handle the `/stories/public/:id` route. This route should fetch the story data from the backend (e.g., `GET /api/stories/:id` which needs to be made public or have specific RLS). Use the `StoryDisplay` component (Task 95) to render the content. Ensure no authentication checks are performed on this route.",
+        "testStrategy": "Publish a story. Copy its public URL. Open an incognito browser window (not logged in) and navigate to the public URL. Verify the story and illustration are displayed correctly. Test with an ID of an unpublished story (should not be accessible).",
+        "priority": "high",
+        "dependencies": [
+          95
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 100,
+        "title": "Supabase RLS: Public and Private Story Access",
+        "description": "Implement Supabase Row Level Security (RLS) on the `stories` table to allow public read access for stories where `is_public` is `true`, while maintaining owner-only read access for other stories.",
+        "details": "In Supabase Studio, navigate to the `stories` table RLS policies. Create a new `SELECT` policy. Define the `USING` expression to allow access if `is_public = true` OR `auth.uid() = user_id`. This combines the public access rule with the existing owner-only rule.",
+        "testStrategy": "1. Logged-in user: Verify they can see their own stories (public or private). 2. Logged-out user: Verify they can only see stories where `is_public` is `true`. Attempt to access a private story as a logged-out user (should fail). 3. Logged-in user: Verify they cannot see other users' private stories.",
+        "priority": "high",
+        "dependencies": [
+          96,
+          99
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 101,
+        "title": "Frontend: Display Public Status in Story List",
+        "description": "Update the frontend story list page to visually indicate which stories are public (e.g., with a 'Public' tag or icon).",
+        "details": "Modify the component responsible for displaying the list of user's stories. When fetching story data, include the `is_public` field. Based on this field, render a 'Public' tag, an eye icon, or similar visual indicator next to the story title or on the story card.",
+        "testStrategy": "Generate several stories. Publish some and keep others private. Navigate to the story list page. Verify that only the published stories display the 'Public' indicator correctly.",
+        "priority": "medium",
+        "dependencies": [
+          98,
+          100
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 102,
+        "title": "Backend: Implement Unpublish Story Feature",
+        "description": "Implement a new backend API endpoint (e.g., PATCH /api/stories/:id/unpublish) that allows an authenticated story owner to set the 'is_public' flag of a story to false and nullify its 'published_at' timestamp.",
+        "details": "Create a new Hono route, for example, PATCH /api/stories/:id/unpublish. Apply the authentication middleware (from Task 86) to protect this endpoint. Extract the story 'id' from the URL parameters and the authenticated 'user_id' from the Hono context. Before performing the update, query the 'stories' table to verify that the story with the given 'id' exists and its 'user_id' matches the authenticated 'user_id'. If the story is not found or the user is not the owner, return an appropriate error response (e.g., 404 Not Found or 403 Forbidden). If authorized, update the 'stories' table for the specified 'id' by setting 'is_public' to 'false' and 'published_at' to 'NULL'. Return a success response (e.g., 200 OK) with the updated story data or a confirmation message.",
+        "testStrategy": "1. **Prerequisite:** Ensure a story exists and is owned by a test user. Publish this story using the endpoint from Task 97, verifying 'is_public' is true and 'published_at' is set in Supabase. 2. **Successful Unpublish:** As the authenticated owner of the published story, send a PATCH request to /api/stories/:id/unpublish. Verify the API returns a 200 OK. Check the Supabase 'stories' table for that story ID to confirm 'is_public' is now 'false' and 'published_at' is 'NULL'. 3. **Unauthenticated Access:** Attempt to PATCH to the endpoint without a JWT. Verify a 401 Unauthorized response. 4. **Unauthorized User:** As an authenticated user who does not own the story, attempt to PATCH to the endpoint. Verify a 403 Forbidden response. 5. **Invalid Story ID:** As an authenticated user, attempt to PATCH to the endpoint with a non-existent story ID. Verify a 404 Not Found response. 6. **Already Unpublished Story:** Attempt to unpublish a story that is already 'is_public: false'. Verify the operation completes successfully (idempotent) or returns an appropriate status/message.",
+        "status": "done",
+        "dependencies": [
+          86,
+          96,
+          97
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 103,
+        "title": "Refactor: Unify Story View Endpoint and Frontend",
+        "description": "Modify the backend to serve both public and private story data from a single '/stories/:id' endpoint, based on user authentication and ownership. Remove the now-obsolete '/stories/public/:id' route and the corresponding frontend component (PublicStoryPage.tsx). Update StoryDetailPage.tsx to handle both authenticated owner views and public anonymous views.",
+        "details": "### Backend Modifications\n1.  **Modify GET /api/stories/:id endpoint:**\n    *   Ensure this endpoint is protected by the authentication middleware (Task 86) but allows unauthenticated access to proceed with limited data.\n    *   Inside the handler, retrieve the story by `id` from the database.\n    *   **Access Logic:**\n        *   If an authenticated user is present (from middleware context):\n            *   If the user's `id` matches the story's `user_id` (owner), return the story data regardless of its `is_public` status.\n            *   If the user is not the owner, check if `is_public` is `true`. If so, return the story. Otherwise, return a 404 Not Found response (to avoid revealing existence of private stories).\n        *   If no authenticated user is present (anonymous access):\n            *   Check if `is_public` is `true`. If so, return the story. Otherwise, return a 404 Not Found response.\n    *   Ensure appropriate HTTP status codes (200 OK, 404 Not Found) are returned.\n2.  **Remove /api/stories/public/:id route:**\n    *   Locate and delete or comment out any existing Hono route definition for `/api/stories/public/:id`.\n\n### Frontend Modifications\n1.  **Remove PublicStoryPage.tsx:**\n    *   Delete the `src/pages/PublicStoryPage.tsx` file (or equivalent).\n    *   Remove any corresponding route definitions in `src/App.tsx` or `src/main.tsx` that point to `PublicStoryPage.tsx`.\n2.  **Update StoryDetailPage.tsx:**\n    *   Modify the data fetching logic within `StoryDetailPage.tsx` to always call the unified `GET /api/stories/:id` endpoint.\n    *   Implement conditional rendering based on the fetched data and the user's authentication status (e.g., display editing options only for owners).\n    *   Handle cases where the story is not found or access is denied (e.g., 404 response from backend) by displaying a user-friendly message (e.g., 'Story not found' or 'You do not have permission to view this story').\n    *   Ensure the component correctly displays public stories for anonymous users and private/public stories for authenticated owners.",
+        "testStrategy": "### Backend Testing\n1.  **Setup:** Create two stories: one private (Story A, owned by User X) and one public (Story B, owned by User Y).\n2.  **Test Private Story (Story A) Access via GET /api/stories/:id:**\n    *   **As User X (owner):** Send authenticated GET request. Expected: 200 OK, full story data.\n    *   **As User Z (authenticated, not owner):** Send authenticated GET request. Expected: 404 Not Found.\n    *   **Unauthenticated:** Send GET request. Expected: 404 Not Found.\n3.  **Test Public Story (Story B) Access via GET /api/stories/:id:**\n    *   **As User Y (owner):** Send authenticated GET request. Expected: 200 OK, full story data.\n    *   **As User Z (authenticated, not owner):** Send authenticated GET request. Expected: 200 OK, full story data.\n    *   **Unauthenticated:** Send GET request. Expected: 200 OK, full story data.\n4.  **Verify Removal of Old Route:** Attempt to access `/api/stories/public/:id` for any story. Expected: 404 Not Found or similar error, confirming route removal.\n\n### Frontend Testing\n1.  **Setup:** Ensure the backend tests above pass and stories are set up as described.\n2.  **Test Private Story (Story A) Display:**\n    *   **Login as User X:** Navigate to `/stories/A_ID`. Expected: Story A content displayed correctly, with owner-specific UI elements (if any).\n    *   **Login as User Z:** Navigate to `/stories/A_ID`. Expected: 'Story not found' or 'Access denied' message.\n    *   **Logout (anonymous):** Navigate to `/stories/A_ID`. Expected: 'Story not found' message.\n3.  **Test Public Story (Story B) Display:**\n    *   **Login as User Y:** Navigate to `/stories/B_ID`. Expected: Story B content displayed correctly, with owner-specific UI elements.\n    *   **Login as User Z:** Navigate to `/stories/B_ID`. Expected: Story B content displayed correctly.\n    *   **Logout (anonymous):** Navigate to `/stories/B_ID`. Expected: Story B content displayed correctly.\n4.  **Code Review:** Verify `PublicStoryPage.tsx` file is deleted and no longer referenced in the frontend codebase.",
+        "status": "done",
+        "dependencies": [
+          53,
+          86,
+          90,
+          96,
+          97,
+          102
+        ],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-07-01T00:41:01.737Z",
+      "updated": "2025-07-01T15:38:09.397Z",
       "description": "Tasks for master context"
     }
   }

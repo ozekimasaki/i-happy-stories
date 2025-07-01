@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { authMiddleware } from '../../middleware/auth';
-import { createStory, getStoriesByUserId, getStoryById, deleteStory, updateStory, getLatestStories } from '../../services/storyService';
+import { authMiddleware, optionalAuthMiddleware } from '../../middleware/auth';
+import { createStory, getStoriesByUserId, getStoryById, deleteStory, updateStory, getLatestStories, publishStory, unpublishStory } from '../../services/storyService';
 import { createIllustration } from '../../services/illustrationService';
 import { storyRequestSchema, storyUpdateSchema } from '../../schemas/storySchema';
 
@@ -37,26 +37,27 @@ posts.get('/', authMiddleware, async (c) => {
   }
 });
 
-// 特定の投稿を取得
-posts.get('/:id', authMiddleware, async (c) => {
-  const user = c.get('user');
+
+
+// 特定の投稿を取得 (認証はオプション)
+// RLSポリシーにより、公開物語もしくは自分の物語のみ取得可能
+posts.get('/:id', optionalAuthMiddleware, async (c) => {
   const id = parseInt(c.req.param('id'), 10);
 
-  if (!user) {
-    return c.json({ error: '認証が必要です' }, 401);
-  }
   if (Number.isNaN(id)) {
     return c.json({ error: 'IDの形式が正しくありません' }, 400);
   }
 
   try {
-    const story = await getStoryById(c, id, user.id);
-    if (!story) {
-      return c.json({ error: '物語が見つかりません' }, 404);
-    }
+    // サービス層ではuserIdをチェックしない。RLSに任せる。
+    const story = await getStoryById(c, id);
     return c.json({ story: story, message: `物語(ID:${id})を取得しました` });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
     console.error(`Error fetching story ${id}:`, error);
+    if (errorMessage.includes('見つかりません')) {
+      return c.json({ error: errorMessage }, 404);
+    }
     return c.json({ error: '物語の取得に失敗しました' }, 500);
   }
 });
@@ -136,6 +137,58 @@ posts.put('/:id', authMiddleware, async (c) => {
     }
     
     return c.json({ error: '物語の更新中にサーバーエラーが発生しました' }, 500);
+  }
+});
+
+// 物語を公開
+posts.patch('/:id/publish', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const id = parseInt(c.req.param('id'), 10);
+
+  if (!user) {
+    return c.json({ error: '認証が必要です' }, 401);
+  }
+  if (Number.isNaN(id)) {
+    return c.json({ error: 'IDの形式が正しくありません' }, 400);
+  }
+
+  try {
+    const publishedStory = await publishStory(c, id, user.id);
+    return c.json({ story: publishedStory, message: '物語を公開しました' });
+  } catch (error: unknown) {
+    console.error(`Error publishing story ${id}:`, error);
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+    
+    if (errorMessage.includes('見つからないか') || errorMessage.includes('権限がありません')) {
+        return c.json({ error: errorMessage }, 404);
+    }
+    
+    return c.json({ error: '物語の公開中にサーバーエラーが発生しました' }, 500);
+  }
+});
+
+// 物語を非公開にする
+posts.patch('/:id/unpublish', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const id = parseInt(c.req.param('id'), 10);
+
+  if (!user) {
+    return c.json({ error: '認証が必要です' }, 401);
+  }
+  if (Number.isNaN(id)) {
+    return c.json({ error: 'IDの形式が正しくありません' }, 400);
+  }
+
+  try {
+    const unpublishedStory = await unpublishStory(c, id, user.id);
+    return c.json({ story: unpublishedStory, message: '物語を非公開にしました。' });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+    console.error(`Error unpublishing story ${id}:`, error);
+    if (errorMessage.includes('見つからないか') || errorMessage.includes('権限がありません')) {
+        return c.json({ error: errorMessage }, 404);
+    }
+    return c.json({ error: '物語の非公開中にサーバーエラーが発生しました' }, 500);
   }
 });
 

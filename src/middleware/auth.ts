@@ -1,6 +1,22 @@
 import { Context, Next } from 'hono';
 import { getSupabase } from '../lib/supabase';
 
+export const optionalAuthMiddleware = async (c: Context, next: Next) => {
+  const authHeader = c.req.header('Authorization');
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const supabase = getSupabase(c);
+    const { data: { user } } = await supabase.auth.getUser(token);
+
+    if (user) {
+      c.set('user', user);
+    }
+  }
+
+  await next();
+};
+
 export const authMiddleware = async (c: Context, next: Next) => {
   const authHeader = c.req.header('Authorization');
 

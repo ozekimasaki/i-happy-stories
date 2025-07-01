@@ -1,23 +1,22 @@
 import React, { useState } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { toast } from "sonner";
+import { toast } from 'sonner';
+import StoryInputForm from '@/components/StoryInputForm';
+import type { Story } from 'types/hono';
 
 const StoryGenerationPage: React.FC = () => {
-  const [prompt, setPrompt] = useState('');
-  const [story, setStory] = useState<{ story: string; imageUrl: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { session } = useAuthStore();
+  const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+  const handleGenerateStory = async (prompt: string) => {
     if (!session) {
-      toast.error('ログインしていません。');
+      toast.error('物語を生成するにはログインが必要です。');
       return;
     }
 
     setIsLoading(true);
-    setStory(null);
-
     try {
       const response = await fetch('/api/v1/posts', {
         method: 'POST',
@@ -33,11 +32,10 @@ const StoryGenerationPage: React.FC = () => {
         throw new Error(errorData.error || '物語の生成に失敗しました。');
       }
 
-      const data = await response.json() as { story: { content: string }, illustration?: { image_url: string } };
-      setStory({
-        story: data.story.content,
-        imageUrl: data.illustration?.image_url || '',
-      });
+      const data = await response.json() as { story: Story };
+      toast.success('新しい物語が生まれました！');
+      navigate(`/stories/${data.story.id}`);
+
     } catch (err: unknown) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -57,46 +55,13 @@ const StoryGenerationPage: React.FC = () => {
           <p className="text-stone-500">あなたのアイデアから、AIが世界に一つだけの物語を紡ぎ出します。</p>
         </div>
         
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="prompt" className="block text-sm font-medium text-stone-700">作りたい物語のテーマ</label>
-            <textarea
-              id="prompt"
-              placeholder="例：「魔法の森に住む、歌うのが好きな小さなキツネの冒険」 「今日は娘の誕生日、娘は大好物のショートケーキを美味しそうに食べていた。」"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 bg-white border border-stone-300 rounded-md shadow-sm placeholder-stone-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm h-32"
-            />
-          </div>
-          <button onClick={handleSubmit} disabled={!prompt.trim() || isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed">
-            {isLoading ? '生成中...' : '物語を生成する'}
-          </button>
-        </div>
+        <StoryInputForm onSubmit={handleGenerateStory} isLoading={isLoading} />
 
         {isLoading && (
           <div className="mt-4 text-center text-stone-600">
-            <p>物語を生成しています。しばらくお待ちください...</p>
-          </div>
-        )}
-
-        {story && (
-          <div className="mt-6 pt-6 border-t border-stone-200">
-            <div className="text-center mb-4">
-              <h2 className="text-xl font-bold text-stone-800">生成された物語</h2>
-            </div>
-            <div className="space-y-4">
-              {story.imageUrl && (
-                <img
-                  src={story.imageUrl}
-                  alt="生成されたイラスト"
-                  className="rounded-lg w-full max-w-md mx-auto shadow-md"
-                />
-              )}
-              <div className="prose prose-stone max-w-none lg:prose-lg">
-                {story.story.split('\n').map((paragraph, index) => (
-                  paragraph.trim() && <p key={index}>{paragraph}</p>
-                ))}
-              </div>
+            <div className="animate-pulse">
+              <p className="text-lg">物語を紡いでいます...</p>
+              <p className="text-sm">素晴らしい物語がもうすぐ生まれます。しばらくお待ちください。</p>
             </div>
           </div>
         )}
