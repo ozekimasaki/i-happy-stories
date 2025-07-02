@@ -1,10 +1,9 @@
 import { Hono } from 'hono';
-import { serveStatic } from 'hono/cloudflare-pages';
 import api from './routes';
 
 const app = new Hono();
 
-// Global error handler
+// Global error handler for API routes
 app.onError((err, c) => {
   console.error('==================== UNHANDLED ERROR ====================');
   console.error(`Error occurred on: ${c.req.method} ${c.req.url}`);
@@ -23,13 +22,12 @@ app.onError((err, c) => {
   );
 });
 
-// Mount the API routes at /api
+// Mount the API routes at /api. This is the ONLY responsibility of the worker.
 app.route('/api', api);
 
-// For all other requests, attempt to serve static assets.
-// If an asset is not found, Hono will return a 404 response.
-// Cloudflare Pages will then use the `not_found_handling` in `wrangler.toml`
-// to serve `index.html`, enabling SPA routing.
-app.use('*', serveStatic());
+// For any other request (e.g., /login, /static/asset.js), Hono will not find a route.
+// It will automatically return a 404 Not Found response.
+// Cloudflare Pages will catch this 404 and then apply its static asset handling,
+// including the 'single-page-application' fallback, to serve index.html.
 
 export default app;
