@@ -66,7 +66,22 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
     - **登場人物の気持ちが伝わる、心からの短いセリフ**（例：'「ごめんね」とママは言った。「あなたが大好きだから、心配になっちゃったの」'）を**必ず1つ以上**含めます。
 - **名前の扱い:** ユーザーが子どもの名前を入力した場合、その名前を物語の中で必ず使用します。**入力に名前がない場合は、「むすめ」「ぼうや」のような一般的な言葉を使い、新しい名前は創作しません。**
 - **文字数:** 全体で200〜500字程度にまとめます。
-
+- **文体:** 子どもへの語りかけのような、柔らかく、詩的で、美しい文体で書いてください。**物語の単調さを避けるため、文末の表現に多様性を持たせることが極めて重要です。**
+- **文末表現のバリエーション（最重要）:**
+    - **避けるべき表現:** '〜しました'、'〜でした'のような過去形の連発。
+    - **推奨される表現例:**
+        - 体言止め（名詞で終わる）: 'そこは、きらきらの宝石箱。'
+        - 動詞の連用形（〜て、〜で）: '風がふいて、葉っぱが踊る。'
+        - 様子や状態を表す表現: 'あたりはしんと静まりかえっている。'
+        - 感嘆や呼びかけ: 'なんて素敵な眺めでしょう！'
+        - 現在形や進行形: '鳥たちが楽しそうに歌っているところです。'
+        - のです・のです調: '本当は、少しだけ寂しかったのです。'
+        - だろう・でしょう: 'もうすぐ、朝がくるだろう。'
+- **表現:** 擬音語・擬態語（ふわふわ、きらきら）を豊かに使い、五感に訴えかける描写を心がけてください。
+- **視点:** 物語の世界を優しく見守る、三人称視点で記述してください。
+- **構成:**
+    - **タイトル:** 物語のテーマを象徴する、魅力的で短いタイトルを最初に書いてください。
+    - **本文:** 8〜15文程度の短い文章で構成してください。
 ## 3. 必須出力フォーマット
 以下のJSON形式で、思考プロセスや他のテキストは一切含めず、有効なJSONオブジェクトのみを返してください。
 {
@@ -312,7 +327,7 @@ export const deleteStory = async (c: Context, storyId: number, userId: string) =
   // 1. Get the story details including illustrations and audios
   const { data: story, error: fetchError } = await supabase
     .from('stories')
-    .select('id, illustrations(image_path), audios(audio_url)')
+    .select('id, user_id, illustrations(image_url), audios(audio_url)')
     .eq('id', storyId)
     .eq('user_id', userId)
     .single();
@@ -328,11 +343,11 @@ export const deleteStory = async (c: Context, storyId: number, userId: string) =
 
   // 2. Delete associated images from Supabase Storage
   if (story.illustrations && story.illustrations.length > 0) {
-    const imagePaths = (story.illustrations as { image_path: string | null }[])
+    const imagePaths = (story.illustrations as { image_url: string | null }[])
       .map((img) => {
-        if (!img.image_path) return null;
+        if (!img.image_url) return null;
         try {
-          const url = new URL(img.image_path);
+          const url = new URL(img.image_url);
           const pathParts = url.pathname.split('/');
           const bucketName = 'illustrations';
           const bucketIndex = pathParts.indexOf(bucketName);
@@ -341,7 +356,7 @@ export const deleteStory = async (c: Context, storyId: number, userId: string) =
           }
           return null;
         } catch {
-          console.error('無効な形式の画像URLです:', img.image_path);
+          console.error('無効な形式の画像URLです:', img.image_url);
           return null;
         }
       })
@@ -473,7 +488,7 @@ export const generateStoryAudio = async (c: Context, storyId: number, userId: st
   
   let pcmBuffer: Buffer;
   try {
-    const ttsModelName = "gemini-2.5-flash-preview-tts"; 
+    const ttsModelName = "gemini-2.5-pro-preview-tts"; 
 
     const response = await (genAI as any).models.generateContent({
         model: ttsModelName,
