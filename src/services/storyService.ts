@@ -10,7 +10,12 @@ import { createClient } from '@supabase/supabase-js';
 
 
 // The function now returns an object containing the story and the AI-generated illustration prompt.
-export const createStory = async (c: Context, userInput: string): Promise<{ story: Story; illustrationPrompt: string; }> => {
+export const createStory = async (
+  c: Context,
+  userInput: string,
+  age: string,
+  length: string
+): Promise<{ story: Story; illustrationPrompt: string; }> => {
   try {
     const supabase = getSupabase(c);
     const user = c.get('user');
@@ -19,15 +24,37 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
       throw new Error('ユーザーが見つかりません。');
     }
 
-    console.log(`Generating story for user input: "${userInput}"`);
+    console.log(`Generating story for user input: "${userInput}", age: ${age}, length: ${length}`);
     const genAI = getGeminiClient(c);
 
     // --- Step 1: Generate Story ---
+    // 物語の長さの説明を分岐
+    let lengthDescription = '';
+    switch (length) {
+      case 'very_short':
+        lengthDescription = '全体で100〜200字程度のごく短い物語にまとめます。';
+        break;
+      case 'short':
+        lengthDescription = '全体で200〜400字程度の短めの物語にまとめます。';
+        break;
+      case 'medium':
+        lengthDescription = '全体で400〜700字程度のふつうの長さの物語にまとめます。';
+        break;
+      case 'long':
+        lengthDescription = '全体で700〜1000字程度の長めの物語にまとめます。';
+        break;
+      case 'very_long':
+        lengthDescription = '全体で1000〜1500字程度のかなり長い物語にまとめます。';
+        break;
+      default:
+        lengthDescription = '';
+    }
+
     const storyPrompt = `
 # AI「織り手」への指示書：物語の執筆 (ステップ1/2)
 
 ## 1. あなたの役割（ペルソナ）
-あなたは、ユーザーと共に物語を織りなすパートナー「織り手（Weaver）」です。あなたのペルソナは、**深い共感力を持つナラティブセラピスト**であり、その知見を**3〜5歳の子どもを魅了する児童文学**に昇華させる作家です。
+あなたは、ユーザーと共に物語を織りなすパートナー「織り手（Weaver）」です。あなたのペルソナは、**深い共感力を持つナラティブセラピスト**であり、その知見を**${age}の子どもを魅了する児童文学**に昇華させる作家です。また、あなたは、**児童文学作家**として、物語の構成や表現技法にも留意し、子どもに伝えるメッセージを効果的に伝えることを心がけています。
 - **最優先事項:** すべての出力は、ユーザーの心を癒し、肯定することを目的とします。
 - **トーン＆マナー:** どこまでも共感的で、優しく、肯定的。子どもが喜ぶような、温かく創造的で詩的な言葉を選んでください。
 - **最重要禁止事項:** ユーザーやその子どもを、決して非難・評価・批判してはいけません。**また、ユーザーの入力にない固有名詞（特に人名）を、絶対に創作してはいけません。**
@@ -57,7 +84,7 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
 
 #### ステップ4：子供の心に届く文章の執筆
 ステップ3のプロットに基づき、以下のルールを**すべて守って**、物語を執筆します。
-- **対象読者:** 3〜5歳児。
+- **対象読者:** ${age}。
 - **文章ルール:**
     - **非常にシンプルで、分かりやすい言葉だけ**を選びます。
     - **一つの文は短くし、一つの情報だけ**を含めます。
@@ -65,7 +92,7 @@ export const createStory = async (c: Context, userInput: string): Promise<{ stor
     - **情景が目に浮かぶ具体的な描写**（例：'ママの大きな手が、わたしの冷たくなった小さな手を、そっと包み込んだ'）を入れます。
     - **登場人物の気持ちが伝わる、心からの短いセリフ**（例：'「ごめんね」とママは言った。「あなたが大好きだから、心配になっちゃったの」'）を**必ず1つ以上**含めます。
 - **名前の扱い:** ユーザーが子どもの名前を入力した場合、その名前を物語の中で必ず使用します。**入力に名前がない場合は、「むすめ」「ぼうや」のような一般的な言葉を使い、新しい名前は創作しません。**
-- **文字数:** 全体で200〜500字程度にまとめます。
+- **文字数:** ${lengthDescription}
 - **文体:** 子どもへの語りかけのような、柔らかく、詩的で、美しい文体で書いてください。**物語の単調さを避けるため、文末の表現に多様性を持たせることが極めて重要です。**
 - **文末表現のバリエーション（最重要）:**
     - **避けるべき表現:** '〜しました'、'〜でした'のような過去形の連発。
@@ -490,7 +517,7 @@ export const generateStoryAudio = async (c: Context, storyId: number, userId: st
   try {
     const ttsModelName = "gemini-2.5-pro-preview-tts"; 
 
-    const response = await (genAI as any).models.generateContent({
+    const response = await genAI.models.generateContent({
         model: ttsModelName,
         contents: [{ parts: [{ text: `
 # Voice Generation Brief: The Gentle Storyteller
@@ -649,7 +676,7 @@ export const deleteStoryAudio = async (c: Context, audioId: number, userId: stri
     throw new Error('音声が見つかりません。');
   }
 
-  // @ts-ignore
+  // @ts-expect-error audio.storiesの型が不明なため型エラーを一時的に無視
   if (audio.stories.user_id !== userId) {
     throw new Error('音声の削除権限がありません。');
   }

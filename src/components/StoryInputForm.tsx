@@ -1,41 +1,93 @@
 import React, { useState } from 'react';
 
 interface StoryInputFormProps {
-  onSubmit: (prompt: string) => void;
+  onSubmit: (prompt: string, age: string, length: string) => void;
   isLoading: boolean;
+  defaultValues?: {
+    prompt?: string;
+    age?: string;
+    length?: string;
+  }
 }
 
-const StoryInputForm: React.FC<StoryInputFormProps> = ({ onSubmit, isLoading }) => {
-  const [prompt, setPrompt] = useState('');
+const ageOptions = [
+  { value: '1-2歳', label: '1-2歳' },
+  { value: '3-4歳', label: '3-4歳' },
+  { value: '5-6歳', label: '5-6歳' },
+  { value: '7-8歳', label: '7-8歳' },
+  { value: '9-10歳', label: '9-10歳' },
+  { value: '11-12歳', label: '11-12歳' },
+];
+
+const lengthOptions = [
+  { value: 'very_short', label: 'ごく短い (100〜200字)' },
+  { value: 'short', label: '短め (200〜400字)' },
+  { value: 'medium', label: 'ふつう (400〜700字)' },
+  { value: 'long', label: '長め (700〜1000字)' },
+  { value: 'very_long', label: 'かなり長い (1000〜1500字)' },
+];
+
+const StoryInputForm: React.FC<StoryInputFormProps> = ({ onSubmit, isLoading, defaultValues }) => {
+  const [prompt, setPrompt] = useState(defaultValues?.prompt || '');
+  const [age, setAge] = useState(defaultValues?.age || ageOptions[0].value);
+  const [length, setLength] = useState(defaultValues?.length || lengthOptions[2].value);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prompt.trim() || isLoading) return;
-    onSubmit(prompt);
+    if (prompt.trim()) {
+      onSubmit(prompt, age, length);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="prompt" className="block text-sm font-medium text-stone-700">
-          どんな物語を紡ぎますか？
-        </label>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <label htmlFor="prompt" className="block font-medium">物語のテーマ</label>
         <textarea
           id="prompt"
-          placeholder="例：「ニンジンが大好きな、空飛ぶウサギの冒険」 「今日、公園で子どもが初めて歩いた。その時の感動を物語にしたい。」"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 bg-white border border-stone-300 rounded-md shadow-sm placeholder-stone-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm h-32"
-          rows={4}
+          placeholder="例：今日、子どもが公園で転んで泣いてしまった。励ますような物語がほしい。"
+          className="min-h-[120px] resize-y w-full border rounded p-2"
+          disabled={isLoading}
         />
-        <p className="mt-2 text-xs text-stone-500">
-          あなたの体験や感情、または想像した場面を自由に入力してください。AIがあなただけの物語を紡ぎます。
-        </p>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="age" className="block font-medium">対象年齢</label>
+          <select
+            id="age"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            disabled={isLoading}
+            className="w-full border rounded p-2"
+          >
+            {ageOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="length" className="block font-medium">物語の長さ</label>
+          <select
+            id="length"
+            value={length}
+            onChange={(e) => setLength(e.target.value)}
+            disabled={isLoading}
+            className="w-full border rounded p-2"
+          >
+            {lengthOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <button
         type="submit"
-        disabled={!prompt.trim() || isLoading}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        disabled={isLoading || !prompt.trim()}
+        className="w-full py-2 px-4 rounded bg-amber-600 text-white font-bold hover:bg-amber-700 disabled:opacity-50"
       >
         {isLoading ? '生成中...' : '物語を生成する'}
       </button>

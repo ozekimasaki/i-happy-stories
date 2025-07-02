@@ -10,7 +10,7 @@ const StoryGenerationPage: React.FC = () => {
   const { session } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleGenerateStory = async (prompt: string) => {
+  const handleGenerateStory = async (prompt: string, age: string, length: string) => {
     if (!session) {
       toast.error('物語を生成するにはログインが必要です。');
       return;
@@ -24,7 +24,7 @@ const StoryGenerationPage: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, age, length }),
       });
 
       if (!response.ok) {

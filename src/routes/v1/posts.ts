@@ -74,10 +74,10 @@ posts.post('/', authMiddleware, async (c) => {
     return c.json({ errors: formattedErrors }, 400);
   }
   
-  const { prompt } = validationResult.data;
+  const { prompt, age, length } = validationResult.data;
   try {
     // 1. 物語とイラスト用プロンプトを同時に生成
-    const { story, illustrationPrompt } = await createStory(c, prompt);
+    const { story, illustrationPrompt } = await createStory(c, prompt, age, length);
     
     let illustration = null;
     

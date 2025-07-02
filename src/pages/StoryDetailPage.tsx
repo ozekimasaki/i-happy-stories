@@ -177,7 +177,7 @@ const StoryDetailPage: React.FC = () => {
             {isOwner && (
               <div className="flex items-center gap-4 flex-shrink-0">
                 <Link
-                  to={`/stories/edit/${story.id}`}
+                  to={`/stories/${story.id}/edit`}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
                 >
                   編集
