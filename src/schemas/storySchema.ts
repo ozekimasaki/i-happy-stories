@@ -7,4 +7,8 @@ export const storyRequestSchema = z.object({
 export const storyUpdateSchema = z.object({
   title: z.string().min(1, { message: 'タイトルは1文字以上で入力してください。' }),
   content: z.string().min(1, { message: '本文は1文字以上で入力してください。' }),
+});
+
+export const audioRequestSchema = z.object({
+  voice: z.string().min(1, { message: '話者を選択してください。' }),
 }); 

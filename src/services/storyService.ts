@@ -2,6 +2,12 @@ import { Context } from 'hono';
 import { getSupabase } from '../lib/supabase';
 import { getGeminiClient } from '../lib/geminiClient';
 import { Story } from '../../types/hono';
+import { Buffer } from 'node:buffer';
+import { createClient } from '@supabase/supabase-js';
+// The 'wav' package and Node's 'stream' are not compatible with Cloudflare Workers.
+// Replaced with a manual WAV header creation function.
+
+
 
 // The function now returns an object containing the story and the AI-generated illustration prompt.
 export const createStory = async (c: Context, userInput: string): Promise<{ story: Story; illustrationPrompt: string; }> => {
@@ -211,7 +217,8 @@ export const getStoriesByUserId = async (c: Context, userId: string) => {
     .from('stories')
     .select(`
       id, title, content, created_at, is_public, published_at,
-      illustrations ( id, image_url, prompt )
+      illustrations ( id, image_url, prompt ),
+      audios ( id, audio_url, voice_name )
     `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
@@ -240,7 +247,8 @@ export const getStoryById = async (c: Context, storyId: number) => {
         id,
         image_url,
         prompt
-      )
+      ),
+      audios (*)
     `)
     .eq('id', storyId)
     .single();
@@ -299,39 +307,32 @@ export const getLatestStories = async (c: Context, userId: string) => {
 
 export const deleteStory = async (c: Context, storyId: number, userId: string) => {
   const supabase = getSupabase(c);
+  const supabaseAdmin = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  // 1. 削除対象の物語と、関連するイラストの情報を取得
+  // 1. Get the story details including illustrations and audios
   const { data: story, error: fetchError } = await supabase
     .from('stories')
-    .select(`
-      id,
-      user_id,
-      illustrations (
-        image_url
-      )
-    `)
-    .match({ id: storyId, user_id: userId })
+    .select('id, illustrations(image_path), audios(audio_url)')
+    .eq('id', storyId)
+    .eq('user_id', userId)
     .single();
 
-  // 物語が見つからない、または取得でエラーが発生した場合
   if (fetchError || !story) {
-    // fetchError.code 'PGRST116' は 'exact-one row violation' を意味し、0件だった場合に発生する
-    if (fetchError && fetchError.code !== 'PGRST116') { 
-        console.error(`Error fetching story ${storyId} for deletion:`, fetchError);
-        throw new Error('物語の情報を取得中にエラーが発生しました。');
-    }
-    // 物語が存在しない、またはユーザーに権限がない場合
-    throw new Error('削除対象の物語が見つからないか、削除する権限がありません。');
+    console.error(`Error fetching story for deletion ${storyId}:`, fetchError);
+    throw new Error('削除対象の物語が見つからないか、権限がありません。');
   }
 
-  // 2. 関連するイラスト画像をStorageから削除
+  if (story.user_id !== userId) {
+    throw new Error('この物語を削除する権限がありません。');
+  }
+
+  // 2. Delete associated images from Supabase Storage
   if (story.illustrations && story.illustrations.length > 0) {
-    const imagePaths = story.illustrations
-      .map(img => {
-        if (!img.image_url) return null;
-        // URLからパスを抽出 (例: .../illustrations/public/image.png -> public/image.png)
+    const imagePaths = (story.illustrations as { image_path: string | null }[])
+      .map((img) => {
+        if (!img.image_path) return null;
         try {
-          const url = new URL(img.image_url);
+          const url = new URL(img.image_path);
           const pathParts = url.pathname.split('/');
           const bucketName = 'illustrations';
           const bucketIndex = pathParts.indexOf(bucketName);
@@ -339,29 +340,57 @@ export const deleteStory = async (c: Context, storyId: number, userId: string) =
             return pathParts.slice(bucketIndex + 1).join('/');
           }
           return null;
-        } catch (e) {
-            console.error('無効な形式の画像URLです:', img.image_url);
-            return null;
+        } catch {
+          console.error('無効な形式の画像URLです:', img.image_path);
+          return null;
         }
       })
       .filter((path): path is string => path !== null);
 
     if (imagePaths.length > 0) {
-      const { error: storageError } = await supabase.storage
+      const { error: storageError } = await supabaseAdmin.storage
         .from('illustrations')
         .remove(imagePaths);
 
       if (storageError) {
         console.error(`ストレージから画像を削除中にエラーが発生しました (story ${storyId}):`, storageError);
-        // ここではエラーを投げずに処理を続行することも可能ですが、
-        // 一貫性を保つためにエラーとして処理を中断します。
         throw new Error('ストレージからの画像削除に失敗しました。');
       }
     }
   }
 
-  // 3. データベースから物語のレコードを削除
-  // これにより、外部キーに ON DELETE CASCADE が設定されていれば、関連するイラストのレコードも削除されます。
+  // 3. Delete associated audio files from storage
+  if (story.audios && story.audios.length > 0) {
+    const audioPaths = story.audios.map(audio => {
+        try {
+            const bucketName = 'audio';
+            const url = new URL(audio.audio_url);
+            const pathParts = url.pathname.split('/');
+            // The path in storage is what comes after `/storage/v1/object/public/audio/`
+            const bucketIndex = pathParts.indexOf(bucketName);
+            if (bucketIndex !== -1 && bucketIndex + 1 < pathParts.length) {
+                return pathParts.slice(bucketIndex + 1).join('/');
+            }
+            return null;
+        } catch (e) {
+            console.error(`Invalid audio URL format for story ${storyId}: ${audio.audio_url}`, e);
+            return null;
+        }
+    }).filter((path): path is string => path !== null);
+
+    if (audioPaths.length > 0) {
+        const { error: storageError } = await supabaseAdmin.storage
+            .from('audio')
+            .remove(audioPaths);
+
+        if (storageError) {
+            console.error(`Error deleting audio files from storage for story ${storyId}:`, storageError);
+            // Not throwing an error here to allow story deletion to proceed even if file deletion fails
+        }
+    }
+  }
+
+  // 4. データベースから物語のレコードを削除
   const { error: deleteError } = await supabase
     .from('stories')
     .delete()
@@ -373,6 +402,162 @@ export const deleteStory = async (c: Context, storyId: number, userId: string) =
   }
 
   return { message: '物語を削除しました。' };
+};
+
+/**
+ * Creates a WAV file buffer from raw PCM data.
+ * This function is self-contained and has no dependencies on Node.js built-ins like 'fs' or 'stream',
+ * making it compatible with Cloudflare Workers.
+ * @param pcmData The raw PCM audio data (16-bit, 24000Hz, mono).
+ * @returns A Buffer containing the complete WAV file data.
+ */
+function createWavFile(pcmData: Buffer): Buffer {
+  const numChannels = 1;
+  const sampleRate = 24000; // Gemini TTS output sample rate
+  const bitsPerSample = 16;
+  const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  const dataSize = pcmData.length;
+  const chunkSize = 36 + dataSize;
+
+  const buffer = Buffer.alloc(44 + dataSize);
+
+  // RIFF header
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(chunkSize, 4);
+  buffer.write('WAVE', 8);
+
+  // fmt sub-chunk
+  buffer.write('fmt ', 12);
+  buffer.writeUInt32LE(16, 16); // Sub-chunk size (16 for PCM)
+  buffer.writeUInt16LE(1, 20); // Audio format (1 for PCM)
+  buffer.writeUInt16LE(numChannels, 22);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(byteRate, 28);
+  buffer.writeUInt16LE(blockAlign, 32);
+  buffer.writeUInt16LE(bitsPerSample, 34);
+
+  // data sub-chunk
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(dataSize, 40);
+
+  // PCM data
+  pcmData.copy(buffer, 44);
+
+  return buffer;
+}
+
+export const generateStoryAudio = async (c: Context, storyId: number, userId: string, voice: string): Promise<Story> => {
+  const supabase = getSupabase(c);
+  const genAI = getGeminiClient(c);
+  const supabaseAdmin = createClient(c.env.SUPABASE_URL!, c.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+  // 1. Fetch the story to ensure ownership and get content
+  const { data: story, error: storyError } = await supabase
+    .from('stories')
+    .select('content, user_id')
+    .eq('id', storyId)
+    .single();
+
+  if (storyError || !story) {
+    console.error(`Error fetching story ${storyId}:`, storyError);
+    throw new Error('物語が見つかりません。');
+  }
+
+  if (story.user_id !== userId) {
+    throw new Error('この物語の音声を生成する権限がありません。');
+  }
+
+  // 2. Generate audio using Gemini API
+  console.log(`Generating audio for story ${storyId} with voice ${voice}...`);
+  
+  let pcmBuffer: Buffer;
+  try {
+    const ttsModelName = "gemini-2.5-flash-preview-tts"; 
+
+    const response = await (genAI as any).models.generateContent({
+        model: ttsModelName,
+        contents: [{ parts: [{ text: story.content }] }],
+        config: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+                voiceConfig: {
+                    prebuiltVoiceConfig: { voiceName: voice },
+                },
+            },
+        },
+    });
+
+    const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!data) {
+        console.error('Gemini API response did not contain audio data:', response);
+        throw new Error('Gemini APIから音声データを取得できませんでした。');
+    }
+    pcmBuffer = Buffer.from(data, 'base64');
+  } catch (error) {
+      console.error(`Gemini APIでの音声生成中にエラーが発生しました (story ${storyId}):`, error);
+      throw new Error('音声の生成に失敗しました。');
+  }
+
+  // 3. Manually create WAV file buffer from PCM data
+  const wavBuffer = createWavFile(pcmBuffer);
+
+  // 4. Upload audio to Supabase Storage
+  const filePath = `public/${storyId}-${Date.now()}.wav`; // Add timestamp to avoid overwriting
+  const { error: uploadError } = await supabaseAdmin.storage
+      .from('audio')
+      .upload(filePath, wavBuffer, {
+          contentType: 'audio/wav',
+          upsert: false, // Use unique filenames instead of upserting
+      });
+
+  if (uploadError) {
+      console.error(`Supabase Storageへの音声アップロード中にエラーが発生しました (story ${storyId}):`, uploadError);
+      throw new Error('音声ファイルの保存に失敗しました。');
+  }
+
+  // 5. Get public URL and insert into audios table
+  const { data: publicUrlData } = supabaseAdmin.storage
+      .from('audio')
+      .getPublicUrl(filePath);
+
+  if (!publicUrlData) {
+      throw new Error('音声ファイルの公開URLの取得に失敗しました。');
+  }
+  const audioUrl = publicUrlData.publicUrl;
+
+  const { error: insertAudioError } = await supabaseAdmin
+      .from('audios')
+      .insert({
+          story_id: storyId,
+          audio_url: audioUrl,
+          voice_name: voice,
+      });
+
+  if (insertAudioError) {
+      console.error(`Supabase audiosテーブルへの挿入中にエラーが発生しました (story ${storyId}):`, insertAudioError);
+      // Attempt to delete the orphaned file from storage
+      await supabaseAdmin.storage.from('audio').remove([filePath]);
+      throw new Error('音声情報の保存に失敗しました。');
+  }
+
+  // 6. Fetch the updated story with the new audio relation
+  const { data: updatedStory, error: fetchStoryError } = await supabase
+      .from('stories')
+      .select('*, illustrations(*), audios(*)')
+      .eq('id', storyId)
+      .single();
+
+  if (fetchStoryError) {
+      console.error(`更新後の物語データの取得中にエラーが発生しました (story ${storyId}):`, fetchStoryError);
+      throw new Error('更新後の物語データの取得に失敗しました。');
+  }
+
+  if (!updatedStory) {
+      throw new Error('更新後の物語データが見つかりません。');
+  }
+
+  return updatedStory;
 };
 
 export const publishStory = async (c: Context, storyId: number, userId: string) => {
@@ -398,6 +583,58 @@ export const publishStory = async (c: Context, storyId: number, userId: string) 
   }
 
   return publishedStory;
+};
+
+export const deleteStoryAudio = async (c: Context, audioId: number, userId: string) => {
+  const supabaseAdmin = createClient(
+    c.env.SUPABASE_URL!,
+    c.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  // 1. Get audio record to verify ownership and get file path
+  const { data: audio, error: fetchError } = await supabaseAdmin
+    .from('audios')
+    .select('id, audio_url, stories(user_id)')
+    .eq('id', audioId)
+    .single();
+
+  if (fetchError || !audio) {
+    console.error(`Error fetching audio ${audioId}:`, fetchError);
+    throw new Error('音声が見つかりません。');
+  }
+
+  // @ts-ignore
+  if (audio.stories.user_id !== userId) {
+    throw new Error('音声の削除権限がありません。');
+  }
+
+  // 2. Delete audio file from storage
+  const filePath = new URL(audio.audio_url).pathname.split('/audio/').pop();
+  if (!filePath) {
+    throw new Error('無効な音声ファイルパスです。');
+  }
+
+  const { error: storageError } = await supabaseAdmin.storage
+    .from('audio')
+    .remove([filePath]);
+
+  if (storageError) {
+    console.error(`Error deleting audio file from storage: ${filePath}`, storageError);
+    // Continue to delete DB record even if file deletion fails
+  }
+
+  // 3. Delete audio record from database
+  const { error: dbError } = await supabaseAdmin
+    .from('audios')
+    .delete()
+    .eq('id', audioId);
+
+  if (dbError) {
+    console.error(`Error deleting audio record from DB: ${audioId}`, dbError);
+    throw new Error('音声レコードの削除に失敗しました。');
+  }
+
+  return { success: true };
 };
 
 export const unpublishStory = async (c: Context, storyId: number, userId: string) => {

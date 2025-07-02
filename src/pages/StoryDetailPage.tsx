@@ -4,7 +4,10 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 import type { Story } from 'types/hono';
-import { getStory, publishStory, unpublishStory } from '@/lib/apiClient';
+import { getStory, publishStory, unpublishStory, generateAudio, deleteAudio } from '@/lib/apiClient';
+import AudioGenerationModal from '@/components/features/story/AudioGenerationModal';
+
+import { Sparkles, Trash2 } from 'lucide-react';
 
 const StoryDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,10 +16,32 @@ const StoryDetailPage: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [publicUrl, setPublicUrl] = useState('');
+  const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [isAudioDeleteModalOpen, setIsAudioDeleteModalOpen] = useState(false);
+  const [selectedAudio, setSelectedAudio] = useState<{ id: number; url: string } | null>(null);
   const { session } = useAuthStore();
   const navigate = useNavigate();
 
-    const handleTogglePublish = async () => {
+  const handleGenerateAudio = async (voice: string) => {
+    if (!story) return;
+
+    setIsGeneratingAudio(true);
+    try {
+      const updatedStory = await generateAudio(story.id, voice);
+      setStory(updatedStory);
+      toast.success('音声の生成が完了しました。');
+      setIsAudioModalOpen(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '音声の生成に失敗しました。';
+      toast.error(errorMessage);
+      console.error('Failed to generate audio:', error);
+    } finally {
+      setIsGeneratingAudio(false);
+    }
+  };
+
+  const handleTogglePublish = async () => {
     if (!story) return;
 
     try {
@@ -35,6 +60,29 @@ const StoryDetailPage: React.FC = () => {
       const errorMessage = error instanceof Error ? error.message : '公開状態の更新に失敗しました。';
       toast.error(errorMessage);
       console.error('Failed to update publish status:', error);
+    }
+  };
+
+  const handleDeleteAudio = async () => {
+    if (!selectedAudio) return;
+
+    try {
+      await deleteAudio(selectedAudio.id);
+      toast.success('音声を削除しました。');
+      setStory(prevStory => {
+        if (!prevStory) return null;
+        return {
+          ...prevStory,
+          audios: prevStory.audios?.filter(a => a.id !== selectedAudio.id) || [],
+        };
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '音声の削除に失敗しました。';
+      toast.error(errorMessage);
+      console.error('Failed to delete audio:', error);
+    } finally {
+      setIsAudioDeleteModalOpen(false);
+      setSelectedAudio(null);
     }
   };
 
@@ -59,7 +107,7 @@ const StoryDetailPage: React.FC = () => {
           if (errorData?.error) {
             errorMessage = errorData.error;
           }
-        } catch (e) {
+        } catch {
           // JSONのパースに失敗した場合は、デフォルトのエラーメッセージを使用します
         }
         throw new Error(errorMessage);
@@ -156,12 +204,44 @@ const StoryDetailPage: React.FC = () => {
           <p className="text-sm text-stone-500 mb-6">
             作成日時: {new Date(story.created_at).toLocaleString()}
           </p>
-          
+
+          {story.audios && story.audios.length > 0 ? (
+            <div className="my-6">
+              {story.audios.map((audio) => (
+                <div key={audio.id} className="flex items-center gap-2 mb-2">
+                  <audio controls src={audio.audio_url} className="w-full">
+                    Your browser does not support the audio element.
+                  </audio>
+                  <button
+                    onClick={() => {
+                      setSelectedAudio({ id: audio.id, url: audio.audio_url });
+                      setIsAudioDeleteModalOpen(true);
+                    }}
+                    className="p-2 text-stone-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                    aria-label="音声を削除"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="my-6">
+              <button
+                onClick={() => setIsAudioModalOpen(true)}
+                className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                音声を生成
+              </button>
+            </div>
+          )}
+
           {story.illustrations && story.illustrations.length > 0 && (
-            <img 
-              src={story.illustrations[0].image_url} 
+            <img
+              src={story.illustrations[0].image_url}
               alt={story.title}
-              className="rounded-lg object-cover w-full max-w-3xl mx-auto mb-8 shadow-md" 
+              className="rounded-lg object-cover w-full max-w-3xl mx-auto mb-8 shadow-md"
             />
           )}
           
@@ -203,6 +283,39 @@ const StoryDetailPage: React.FC = () => {
                 className="bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-2 px-6 rounded-lg transition-colors duration-200"
               >
                 閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <AudioGenerationModal
+        isOpen={isAudioModalOpen}
+        onClose={() => setIsAudioModalOpen(false)}
+        onGenerate={handleGenerateAudio}
+        isGenerating={isGeneratingAudio}
+      />
+
+      {isAudioDeleteModalOpen && selectedAudio && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 transition-opacity duration-300">
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full m-4 transform transition-all duration-300 scale-100">
+            <h2 className="text-2xl font-bold mb-4 text-stone-800">音声の削除の確認</h2>
+            <p className="text-stone-700 mb-8">この音声を本当に削除しますか？<br />この操作は取り消せません。</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setIsAudioDeleteModalOpen(false);
+                  setSelectedAudio(null);
+                }}
+                className="bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-2 px-6 rounded-lg transition-colors duration-200"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleDeleteAudio}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors duration-200"
+              >
+                削除する
               </button>
             </div>
           </div>

@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { authMiddleware, optionalAuthMiddleware } from '../../middleware/auth';
-import { createStory, getStoriesByUserId, getStoryById, deleteStory, updateStory, getLatestStories, publishStory, unpublishStory } from '../../services/storyService';
+import { createStory, getStoriesByUserId, getStoryById, deleteStory, updateStory, getLatestStories, publishStory, unpublishStory, generateStoryAudio, deleteStoryAudio } from '../../services/storyService';
 import { createIllustration } from '../../services/illustrationService';
-import { storyRequestSchema, storyUpdateSchema } from '../../schemas/storySchema';
+import { storyRequestSchema, storyUpdateSchema, audioRequestSchema } from '../../schemas/storySchema';
 
 const posts = new Hono();
 
@@ -193,6 +193,43 @@ posts.patch('/:id/unpublish', authMiddleware, async (c) => {
 });
 
 // 投稿を削除
+// 音声ファイルを生成する
+posts.post('/:id/generate-audio', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const id = parseInt(c.req.param('id'), 10);
+
+  if (!user) {
+    return c.json({ error: '認証が必要です' }, 401);
+  }
+  if (Number.isNaN(id)) {
+    return c.json({ error: 'IDの形式が正しくありません' }, 400);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const validationResult = audioRequestSchema.safeParse(body);
+
+  if (!validationResult.success) {
+    const formattedErrors = validationResult.error.issues.map(
+      (issue) => `${issue.path.join('.')}: ${issue.message}`
+    );
+    return c.json({ errors: formattedErrors }, 400);
+  }
+
+  try {
+    const updatedStory = await generateStoryAudio(c, id, user.id, validationResult.data.voice);
+    return c.json({ story: updatedStory, message: '音声ファイルを生成しました。' });
+  } catch (error: unknown) {
+    console.error(`Error generating audio for story ${id}:`, error);
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+
+    if (errorMessage.includes('見つからないか') || errorMessage.includes('権限がありません')) {
+      return c.json({ error: errorMessage }, 404);
+    }
+
+    return c.json({ error: `音声の生成に失敗しました: ${errorMessage}` }, 500);
+  }
+});
+
 posts.delete('/:id', authMiddleware, async (c) => {
   const user = c.get('user');
   const id = parseInt(c.req.param('id'), 10);
@@ -216,6 +253,33 @@ posts.delete('/:id', authMiddleware, async (c) => {
     }
     
     return c.json({ error: '物語の削除中にサーバーエラーが発生しました' }, 500);
+  }
+});
+
+// 音声ファイルを削除する
+posts.delete('/audios/:id', authMiddleware, async (c) => {
+  const user = c.get('user');
+  const id = parseInt(c.req.param('id'), 10);
+
+  if (!user) {
+    return c.json({ error: '認証が必要です' }, 401);
+  }
+  if (Number.isNaN(id)) {
+    return c.json({ error: 'IDの形式が正しくありません' }, 400);
+  }
+
+  try {
+    const result = await deleteStoryAudio(c, id, user.id);
+    return c.json(result, 200);
+  } catch (error: unknown) {
+    console.error(`Error deleting audio ${id}:`, error);
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+
+    if (errorMessage.includes('見つからないか') || errorMessage.includes('権限がありません')) {
+      return c.json({ error: errorMessage }, 404);
+    }
+
+    return c.json({ error: '音声の削除中にサーバーエラーが発生しました' }, 500);
   }
 });
 

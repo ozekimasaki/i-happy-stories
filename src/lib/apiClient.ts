@@ -69,3 +69,35 @@ export const unpublishStory = async (storyId: number): Promise<Story> => {
   const data = await response.json() as { story: Story };
   return data.story;
 };
+
+export const deleteAudio = async (audioId: number): Promise<{ success: boolean }> => {
+  const headers = getAuthHeaders();
+  const response = await fetch(`/api/v1/posts/audios/${audioId}`, {
+    method: 'DELETE',
+    headers,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { error?: string };
+    throw new Error(errorData?.error || '音声の削除に失敗しました。');
+  }
+
+  return response.json();
+};
+
+export const generateAudio = async (id: number, voice: string): Promise<Story> => {
+  const headers = getAuthHeaders();
+  const response = await fetch(`/api/v1/posts/${id}/generate-audio`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ voice }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { error?: string };
+    throw new Error(errorData?.error || '音声の生成に失敗しました。');
+  }
+
+  const data = await response.json() as { story: Story };
+  return data.story;
+};

@@ -11,15 +11,21 @@ export type Story = {
   user_id: string;
   title: string;
   content: string;
-  created_at: string;
   is_public: boolean;
+  created_at: string;
+  updated_at: string;
   published_at: string | null;
-  illustrations: {
-    id: number;
-    image_url: string;
-    prompt: string;
-  }[];
+  illustrations: Illustration[];
+  audios: Audio[];
 };
+
+export type Audio = {
+  id: number;
+  story_id: number;
+  audio_url: string;
+  voice_name: string | null;
+  created_at: string;
+}
 
 export type Illustration = {
   id: number;
