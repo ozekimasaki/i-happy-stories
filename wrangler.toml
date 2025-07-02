@@ -6,5 +6,5 @@ routes = [
   { pattern = "stories.umaibo.dev", custom_domain = true }
 ]
 
-[site]
-bucket = "./dist"
+[assets]
+directory = "./dist"
