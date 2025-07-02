@@ -1,6 +1,6 @@
 version: '1.0'
 project:
-  name: monogatari_weavers
+  name: i-happy-stories
 targets:
   copilot:
     enabled: false
