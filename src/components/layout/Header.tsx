@@ -17,7 +17,7 @@ const Header: React.FC = () => {
     <header className="bg-stone-50 border-b border-stone-200">
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-stone-800">
-          物語Weavers
+          I Happy Stories
         </Link>
 
         {/* Hamburger Menu Button */}

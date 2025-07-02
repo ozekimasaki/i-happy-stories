@@ -63,7 +63,7 @@ const HomePage: React.FC = () => {
     return (
         <div className="container mx-auto py-12 px-4">
             <div className="text-center mb-16">
-                <h1 className="text-4xl font-bold mb-4 text-stone-800">物語Weaversへようこそ</h1>
+                <h1 className="text-4xl font-bold mb-4 text-stone-800">I Happy Storiesへようこそ</h1>
                 <p className="text-xl text-stone-500 mb-8">あなただけの物語を紡ぎましょう。</p>
                 <div> {
                     isAuthenticated ? (
