@@ -492,7 +492,7 @@ export const generateStoryAudio = async (c: Context, storyId: number, userId: st
 
     const response = await (genAI as any).models.generateContent({
         model: ttsModelName,
-        contents: [{ parts: [{ text: story.content }] }],
+        contents: [{ parts: [{ text: `Read the following text as if you are gently and slowly whispering a bedtime story to a beloved young child. Use a soft, warm, and clear voice. Take your time, and pause between sentences to let the child imagine the world you're describing. Your voice should be full of affection and make the child feel safe and loved. Here is the text: ${story.content}` }] }],
         config: {
             responseModalities: ['AUDIO'],
             speechConfig: {
