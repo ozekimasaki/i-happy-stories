@@ -470,7 +470,7 @@ export const generateStoryAudio = async (c: Context, storyId: number, userId: st
   // 1. Fetch the story to ensure ownership and get content
   const { data: story, error: storyError } = await supabase
     .from('stories')
-    .select('content, user_id')
+    .select('title, content, user_id')
     .eq('id', storyId)
     .single();
 
@@ -492,7 +492,38 @@ export const generateStoryAudio = async (c: Context, storyId: number, userId: st
 
     const response = await (genAI as any).models.generateContent({
         model: ttsModelName,
-        contents: [{ parts: [{ text: `Read the following text as if you are gently and slowly whispering a bedtime story to a beloved young child. Use a soft, warm, and clear voice. Take your time, and pause between sentences to let the child imagine the world you're describing. Your voice should be full of affection and make the child feel safe and loved. Here is the text: ${story.content}` }] }],
+        contents: [{ parts: [{ text: `
+# Voice Generation Brief: The Gentle Storyteller
+
+## 1. Persona
+You are a kind and gentle storyteller. Your voice is warm, clear, and reassuring. Your goal is to read a story to a child in a way that is engaging and comforting, making them feel safe and loved.
+
+## 2. Core Mission
+Create a pleasant and calming listening experience. The narration should be soothing, but still feel natural and engaging, like a real person telling a story.
+
+## 3. Vocal Technique
+
+### A. Vocal Quality & Tone
+- **Voice:** A **soft and clear** voice. Maintain a gentle, lower-volume tone, but avoid an overly breathy whisper.
+- **Warmth:** Your voice should be filled with genuine warmth and kindness.
+
+### B. Pacing & Rhythm
+- **Pacing:** A **calm, natural pace**. Speak clearly and unhurriedly, as if you're telling a story to a friend. Avoid speaking too slowly or too quickly.
+- **Pauses:** Use **natural pauses** between sentences to give the listener a moment to imagine the scene. The pauses should feel comfortable, not overly dramatic or long.
+- **Rhythm:** Maintain a smooth, conversational rhythm.
+
+### C. Emotional Connection
+- **Affection:** Let a sense of gentle affection and care come through in your voice.
+- **Presence:** Speak in a way that feels personal and direct, as if you are in the room with the listener.
+
+## 4. Final Instruction
+With these principles in mind, please read the following story. Embody the persona of the Gentle Storyteller and create a narration that is both comforting and enjoyable.
+
+**The Story:**
+${story.title}
+
+${story.content}
+` }] }],
         config: {
             responseModalities: ['AUDIO'],
             speechConfig: {
