@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
+import { serveStatic } from 'hono/cloudflare-workers';
 import api from './routes';
+import manifest from '__STATIC_CONTENT_MANIFEST';
 
 const app = new Hono();
 
@@ -12,15 +14,23 @@ app.onError((err, c) => {
     console.error('Stack trace:', err.stack);
   }
   console.error('=========================================================');
-  
-  return c.json({
-    error: 'Internal Server Error',
-    message: 'An unexpected error occurred. We are looking into it.',
-  }, 500);
+
+  return c.json(
+    {
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred. We are looking into it.',
+    },
+    500
+  );
 });
 
 // Mount the API routes at /api
 app.route('/api', api);
 
+// Serve static assets using the manifest
+app.use('*', serveStatic({ manifest }));
 
-export default app; 
+// SPA fallback: serve index.html for any remaining GET requests
+app.get('*', serveStatic({ path: './index.html', manifest }));
+
+export default app;
