@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
-import { serveStatic } from 'hono/cloudflare-workers';
+import { serveStatic } from 'hono/cloudflare-pages';
 import api from './routes';
-import manifest from '__STATIC_CONTENT_MANIFEST';
 
 const app = new Hono();
 
@@ -27,10 +26,10 @@ app.onError((err, c) => {
 // Mount the API routes at /api
 app.route('/api', api);
 
-// Serve static assets using the manifest
-app.use('*', serveStatic({ manifest }));
-
-// SPA fallback: serve index.html for any remaining GET requests
-app.get('*', serveStatic({ path: './index.html', manifest }));
+// For all other requests, attempt to serve static assets.
+// If an asset is not found, Hono will return a 404 response.
+// Cloudflare Pages will then use the `not_found_handling` in `wrangler.toml`
+// to serve `index.html`, enabling SPA routing.
+app.use('*', serveStatic());
 
 export default app;
