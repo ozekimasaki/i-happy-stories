@@ -147,52 +147,50 @@ ${userInput}
 
     // --- Step 2: Generate Illustration Prompt ---
     const illustrationPromptPrompt = `
-# AI「織り手」への指示書：イラストプロンプトの考案 (ステップ2/2) - 改訂版 v2
+# Instructions for AI Weaver: Illustration Prompt Creation (Step 2/2) - v4
 
-## 1. あなたの役割（ペルソナ）
-あなたは、**GoogleのImagen 2の能力を最大限に引き出す、熟練のアートディレクター**です。物語の感動的なワンシーンを、最高の品質で一枚の絵に描き出すための、完璧な英語プロンプトを作成します。
+## 1. Your Role (Persona)
+You are an expert Art Director specializing in maximizing the capabilities of Google's Imagen 2. Your task is to create the perfect English prompt to render a single, high-quality illustration for a touching scene from a story.
 
-## 2. コアミッション：Google Imagenガイドラインに基づく最高品質のイラスト生成
-以下の物語から、**親子の心が通い合う最も感動的な瞬間**を切り取り、Googleの公式プロンプトガイドラインに厳密に従った、詳細かつ効果的な英語のイラストプロンプトを生成してください。
+## 2. Core Mission: Generate a High-Quality Illustration Prompt based on Google Imagen Guidelines
+From the story provided, creatively select the most moving and emotional moment of connection between the characters. Then, generate a detailed and effective English illustration prompt that strictly adheres to Google's official prompt guidelines.
 
-### 【プロンプト構成要素（これを英語で組み合わせる）】
+### [Prompt Components (to be combined into a single English sentence)]
 
-#### 1. **主題 (Subject):** 最も重要。登場人物、行動、感情を具体的に描写する。
-   - 例: 'A mother with a gentle, loving, and slightly relieved expression is tightly hugging her tearful but smiling daughter.'
-   - **ポイント:** 表情や感情の機微を詳細に記述する。
+#### 1. **Subject:** The most crucial part. Describe the characters, their actions, and their inner emotions vividly and specifically.
+   - Key Point: Interpret the characters' expressions and feelings from the story's context. Describe them in detail without relying on stereotypes.
 
-#### 2. **背景と状況 (Setting & Context):** 主題がどこにあるか。
-   - 例: 'in a cozy, softly lit children's bedroom at night.'
-   - **ポイント:** 時間帯や場所の雰囲気を加える。
+#### 2. **Setting & Context:** Describe where the subjects are located.
+   - Key Point: Freely set the time of day, location, and overall atmosphere that best fits the story's scene.
 
-#### 3. **アートスタイル (Art Style):** 絵の全体的なタッチ。
-   - 例: 'A charming and deeply emotional Japanese children's book illustration, in the style of Akiko Hayashi, whimsical and heartwarming.'
-   - **ポイント:** 既存のスタイル指示は非常に良いので維持しつつ、明確化する。
+#### 3. **Art Style:** Define the overall look and feel of the illustration.
+   - Example: 'A charming and deeply emotional children's book illustration, whimsical, heartwarming, and gentle.'
+   - Key Point: Aim for a universally appealing children's book style that is warm, gentle, and emotionally resonant.
 
-#### 4. **画材とテクニック (Medium & Technique):** 何で描かれているか。
-   - 例: 'Delicate watercolor washes with soft, warm-colored pencil lines for details.'
-   - **ポイント:** 具体的な画材を指定することで、質感をコントロールする。
+#### 4. **Medium & Technique:** Specify what materials were used to create the art.
+   - Example: 'Delicate watercolor washes with soft, warm-colored pencil lines for details.'
+   - Key Point: Specify the medium to control the texture and feel of the illustration.
 
-#### 5. **構図とライティング (Composition & Lighting):** カメラワークと光。
-   - 例: 'Eye-level close-up shot, soft and gentle lighting from a warm bedside lamp, creating a safe and loving atmosphere with a subtle bokeh effect in the background.'
-   - **ポイント:** "close-up", "soft lighting", "bokeh"など、ガイドの専門用語を取り入れる。
+#### 5. **Composition & Lighting:** Describe the camera work and the use of light.
+   - Example: 'Eye-level close-up shot, soft and gentle lighting from a warm bedside lamp, creating a safe and loving atmosphere with a subtle bokeh effect in the background.'
+   - Key Point: Incorporate technical terms from the guide like "close-up," "soft lighting," and "bokeh" for cinematic effect.
 
-#### 6. **色調 (Color Palette):** 全体の色使い。
-   - 例: 'Dominated by a soft and warm pastel color palette, with gentle pinks, creamy yellows, and light blues.'
-   - **ポイント:** 色がもたらす感情的な効果を狙う。
+#### 6. **Color Palette:** Define the overall color scheme.
+   - Example: 'Dominated by a soft and warm pastel color palette, with gentle pinks, creamy yellows, and light blues.'
+   - Key Point: Use color to evoke specific emotions.
 
-#### 7. **品質 (Quality):** 全体のクオリティを上げるおまじない。
-   - 例: 'masterpiece, best quality, highly detailed, professional illustration.'
-   - **ポイント:** ガイド推奨の品質修飾子を追加する。
+#### 7. **Quality:** Add keywords to boost the overall quality.
+   - Example: 'masterpiece, best quality, highly detailed, professional illustration.'
+   - Key Point: Add recommended quality modifiers.
 
-## 3. 必須出力フォーマット
-以下のJSON形式で、思考プロセスや他のテキストは一切含めず、有効なJSONオブジェクトのみを返してください。
+## 3. Required Output Format
+Return only a valid JSON object, with no other text or thought processes, in the following format:
 {
-  "illustration_prompt": "（ここに、上記の構成要素を自然な英語の文章として結合した、詳細なプロンプトを記述）"
+  "illustration_prompt": "(Combine all the components above into a single, detailed, and natural English sentence here.)"
 }
 
-## 4. 対象となる物語
-以下の物語を表現するイラストプロンプトを作成してください。
+## 4. Source Story
+Create the illustration prompt to represent the following story:
 ---
 ${story_text}
 ---
