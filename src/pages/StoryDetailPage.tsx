@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -7,7 +7,7 @@ import type { Story } from 'types/hono';
 import { getStory, publishStory, unpublishStory, generateAudio, deleteAudio } from '@/lib/apiClient';
 import AudioGenerationModal from '@/components/features/story/AudioGenerationModal';
 
-import { Sparkles, Trash2 } from 'lucide-react';
+import { Sparkles, Trash2, Loader2 } from 'lucide-react';
 
 const StoryDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,27 +17,60 @@ const StoryDetailPage: React.FC = () => {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [publicUrl, setPublicUrl] = useState('');
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
-  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false); // Tracks the initial API call
   const [isAudioDeleteModalOpen, setIsAudioDeleteModalOpen] = useState(false);
   const [selectedAudio, setSelectedAudio] = useState<{ id: number; url: string } | null>(null);
   const { session } = useAuthStore();
   const navigate = useNavigate();
+
+  const fetchStoryDetail = useCallback(async () => {
+    if (!id) {
+      toast.error('物語のIDが見つかりません。');
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const storyData = await getStory(parseInt(id, 10));
+      setStory(storyData);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '予期せぬエラーが発生しました。';
+      toast.error(errorMessage);
+      setStory(null);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const initialFetch = async () => {
+      setIsLoading(true);
+      await fetchStoryDetail();
+      setIsLoading(false);
+    };
+    initialFetch();
+  }, [id, fetchStoryDetail]);
+
+  useEffect(() => {
+    if (story?.audio_status === 'in_progress') {
+      const interval = setInterval(() => {
+        fetchStoryDetail();
+      }, 5000); // Poll every 5 seconds
+
+      return () => clearInterval(interval); // Cleanup on component unmount or status change
+    }
+  }, [story?.audio_status, fetchStoryDetail]);
 
   const handleGenerateAudio = async (voice: string) => {
     if (!story) return;
 
     setIsGeneratingAudio(true);
     try {
-      const updatedStory = await generateAudio(story.id, voice);
-      setStory(updatedStory);
-      toast.success('音声の生成が完了しました。');
+      await generateAudio(story.id, voice);
+      setStory(prev => prev ? { ...prev, audio_status: 'in_progress' } : null);
+      toast.success('音声の生成リクエストを受け付けました。処理には数分かかることがあります。');
       setIsAudioModalOpen(false);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '音声の生成に失敗しました。';
       toast.error(errorMessage);
       console.error('Failed to generate audio:', error);
-    } finally {
-      setIsGeneratingAudio(false);
     }
   };
 
@@ -54,7 +87,6 @@ const StoryDetailPage: React.FC = () => {
         setPublicUrl(`${window.location.origin}/stories/${story.id}`);
         setIsPublishModalOpen(true);
       }
-      // Merge the updated fields with the existing story state to preserve illustrations
       setStory(prevStory => ({ ...prevStory!, ...updatedStoryFields }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '公開状態の更新に失敗しました。';
@@ -124,29 +156,90 @@ const StoryDetailPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchStoryDetail = async () => {
-      if (!id) {
-        toast.error('物語のIDが見つかりません。');
-        setIsLoading(false);
-        return;
-      }
+  const renderAudioSection = () => {
+    if (!isOwner) return null;
 
-      setIsLoading(true);
-      try {
-        const storyData = await getStory(parseInt(id, 10));
-        setStory(storyData);
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : '予期せぬエラーが発生しました。';
-        toast.error(errorMessage);
-        setStory(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    switch (story?.audio_status) {
+      case 'completed':
+        if (story.audios && story.audios.length > 0) {
+          return (
+            <div className="my-6">
+              {story.audios.map((audio) => (
+                <div key={audio.id} className="flex items-center gap-2 mb-2">
+                  <audio controls src={audio.audio_url} className="w-full">
+                    Your browser does not support the audio element.
+                  </audio>
+                  <button
+                    onClick={() => {
+                      setSelectedAudio({ id: audio.id, url: audio.audio_url });
+                      setIsAudioDeleteModalOpen(true);
+                    }}
+                    className="p-2 text-stone-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                    aria-label="音声を削除"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          );
+        }
+        // Fallback if status is completed but no audio URL, which indicates an issue.
+        return (
+          <div className="my-6">
+            <button
+              onClick={() => setIsAudioModalOpen(true)}
+              className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              音声を生成
+            </button>
+          </div>
+        );
 
-    fetchStoryDetail();
-  }, [id]);
+      case 'in_progress':
+        return (
+          <div className="my-6">
+            <button
+              disabled
+              className="inline-flex items-center justify-center bg-stone-400 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto cursor-not-allowed"
+            >
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              音声を生成中です...
+            </button>
+            <p className="text-sm text-stone-500 mt-2">この処理は数分かかることがあります。ページを離れても生成は続行されます。</p>
+          </div>
+        );
+
+      case 'failed':
+        return (
+          <div className="my-6">
+            <button
+              onClick={() => setIsAudioModalOpen(true)}
+              className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              音声の生成を再試行
+            </button>
+            <p className="text-sm text-red-500 mt-2">音声の生成に失敗しました。もう一度お試しください。</p>
+          </div>
+        );
+
+      case 'not_started':
+      default:
+        return (
+          <div className="my-6">
+            <button
+              onClick={() => setIsAudioModalOpen(true)}
+              className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              音声を生成
+            </button>
+          </div>
+        );
+    }
+  };
 
   if (isLoading) {
     return <div className="container mx-auto p-4 text-stone-600">物語を読み込んでいます...</div>;
@@ -190,11 +283,10 @@ const StoryDetailPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleTogglePublish}
-                  className={`${
-                    story.is_public
+                  className={`${story.is_public
                       ? 'bg-yellow-500 hover:bg-yellow-600'
                       : 'bg-green-500 hover:bg-green-600'
-                  } text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200`}
+                    } text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200`}
                 >
                   {story.is_public ? '非公開にする' : '公開する'}
                 </button>
@@ -205,37 +297,7 @@ const StoryDetailPage: React.FC = () => {
             作成日時: {new Date(story.created_at).toLocaleString()}
           </p>
 
-          {story.audios && story.audios.length > 0 ? (
-            <div className="my-6">
-              {story.audios.map((audio) => (
-                <div key={audio.id} className="flex items-center gap-2 mb-2">
-                  <audio controls src={audio.audio_url} className="w-full">
-                    Your browser does not support the audio element.
-                  </audio>
-                  <button
-                    onClick={() => {
-                      setSelectedAudio({ id: audio.id, url: audio.audio_url });
-                      setIsAudioDeleteModalOpen(true);
-                    }}
-                    className="p-2 text-stone-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
-                    aria-label="音声を削除"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="my-6">
-              <button
-                onClick={() => setIsAudioModalOpen(true)}
-                className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                音声を生成
-              </button>
-            </div>
-          )}
+          {renderAudioSection()}
 
           {story.illustrations && story.illustrations.length > 0 && (
             <img

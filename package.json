@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "dev:all": "concurrently --names \"vite,wrangler\" \"pnpm:dev\" \"pnpm:dev:worker\"",
-    "dev:worker": "wrangler dev",
+    "dev:worker": "wrangler dev --local",
     "typegen": "wrangler types",
     "build": "tsc && vite build",
     "lint": "eslint .",

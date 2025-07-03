@@ -2048,7 +2048,7 @@
         "description": "Implement a story read-aloud feature, including a backend API to generate and store audio using Google Gemini API, and frontend integration with an audio generation button and player on the story detail page.",
         "details": "### Backend Development\n1.  **Database Schema Update:** Add a new `audio_url` column (TEXT type) to the `stories` table to store the URL of the generated audio file.\n2.  **New API Endpoint:** Create a new Hono endpoint, e.g., `POST /api/stories/:id/audio-generate`.\n    *   Apply the authentication middleware (from Task 86) to protect this endpoint, ensuring only the story owner can trigger audio generation.\n    *   Extract the `story_id` from the URL parameters and the `user_id` from the authenticated context.\n    *   Verify that the authenticated `user_id` matches the `user_id` of the story being requested.\n    *   Retrieve the `story_text` for the given `story_id` from the database.\n3.  **Audio Generation:** Utilize the Google Gemini API (or a related Google AI service like Google Cloud Text-to-Speech, accessible via the same Google Cloud project setup as Gemini) to convert the `story_text` into an audio format (e.g., MP3).\n    *   Research and select the most appropriate Google AI model/service for high-quality text-to-speech conversion.\n    *   Handle potential rate limits or long processing times for audio generation.\n4.  **Audio Storage:** Store the generated audio file in Supabase Storage.\n    *   Define a clear naming convention for audio files (e.g., `stories/audio/{story_id}.mp3`).\n    *   Ensure proper access control for the stored audio files (e.g., public read access).\n5.  **Database Update:** After successful generation and storage, update the `audio_url` column in the `stories` table with the public URL of the newly stored audio file.\n\n### Frontend Development (StoryDetailPage.tsx)\n1.  **Conditional UI:** On the `StoryDetailPage.tsx` (unified by Task 103), add a 'Generate Audio' button.\n    *   This button should only be visible to the authenticated user if they are the owner of the story.\n    *   If `story.audio_url` already exists, display an audio player instead of the 'Generate Audio' button.\n2.  **Audio Generation Flow:**\n    *   When the 'Generate Audio' button is clicked, make an API call to the new `POST /api/stories/:id/audio-generate` endpoint.\n    *   Implement a loading state while the audio is being generated.\n    *   Upon successful response, update the story data in the frontend state to include the new `audio_url`.\n3.  **Audio Player:** Implement an HTML5 `<audio>` element to play the generated audio.\n    *   The player should be displayed when `story.audio_url` is available.\n    *   Consider adding basic controls (play/pause, progress bar).\n4.  **Error Handling:** Display user-friendly error messages if audio generation fails (e.g., API error, network issue).\n5.  **User Experience:** Consider adding a confirmation dialog before generating audio, as it might incur costs or take time.\n\n### General Considerations\n*   **Cost Management:** Be mindful of the costs associated with Google AI API calls for audio generation.\n*   **Performance:** Optimize the audio generation process to minimize latency.\n*   **Scalability:** Ensure the storage and serving of audio files can scale with the number of stories.",
         "testStrategy": "### Backend Testing\n1.  **Prerequisite:** Ensure a story exists and is owned by a test user.\n2.  **Successful Audio Generation (Owner):**\n    *   As the authenticated owner of a story, send a `POST` request to `/api/stories/:id/audio-generate`.\n    *   Expected: 200 OK response. Verify that an audio file is created in Supabase Storage (e.g., `stories/audio/{story_id}.mp3`) and the `audio_url` column in the `stories` table for that story is updated with the correct URL.\n    *   Manually download and play the generated audio file to confirm it corresponds to the story text.\n3.  **Unauthorized Access (Non-Owner):**\n    *   As an authenticated user who is *not* the owner of a story, attempt to send a `POST` request to `/api/stories/:id/audio-generate` for that story.\n    *   Expected: 403 Forbidden response.\n4.  **Unauthenticated Access:**\n    *   As an unauthenticated user, attempt to send a `POST` request to `/api/stories/:id/audio-generate`.\n    *   Expected: 401 Unauthorized response.\n5.  **Invalid Story ID:** Send a request with a non-existent story ID. Expected: 404 Not Found.\n\n### Frontend Testing\n1.  **Owner View (No Audio Yet):**\n    *   Log in as a story owner. Navigate to one of their story detail pages that does not yet have an `audio_url`.\n    *   Verify that the 'Generate Audio' button is visible.\n    *   Click the 'Generate Audio' button. Observe the loading state. Verify that upon completion, an audio player appears and the generated audio can be played.\n2.  **Owner View (Audio Exists):**\n    *   Log in as a story owner. Navigate to a story detail page that already has an `audio_url`.\n    *   Verify that the 'Generate Audio' button is *not* visible, and an audio player is displayed instead. Confirm the audio can be played.\n3.  **Non-Owner/Public View:**\n    *   Log in as a different user (not the owner) or log out completely. Navigate to a public story detail page.\n    *   Verify that the 'Generate Audio' button is *not* visible.\n    *   If the story has an `audio_url`, verify that the audio player is displayed and the audio can be played by non-owners/public users.\n4.  **Error Handling UI:** Simulate a backend error during audio generation (e.g., by temporarily disabling the Gemini API key). Verify that an appropriate error message is displayed on the frontend.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           59,
           86,
@@ -2073,7 +2073,7 @@
               1
             ],
             "details": "1.  **Audio Generation:** Within the `POST /api/stories/:id/audio-generate` endpoint, utilize the Google Gemini API (or Google Cloud Text-to-Speech) to convert the retrieved `story_text` into an audio format (e.g., MP3). Research and select the most appropriate model for quality. 2.  **Audio Storage:** Store the generated audio file in Supabase Storage. Define a naming convention (e.g., `stories/audio/{story_id}.mp3`) and ensure public read access. 3.  **Database Update:** After successful generation and storage, update the `audio_url` column in the `stories` table with the public URL of the newly stored audio file.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use an API client to call the endpoint. Verify that an audio file is created in Supabase Storage with the correct naming and content. Check that the `audio_url` in the database for the corresponding story is updated and points to the correct, publicly accessible URL. Test with different story lengths."
           },
           {
@@ -2082,7 +2082,7 @@
             "description": "Develop a dedicated, reusable React component for playing audio files, leveraging the HTML5 `<audio>` element. This component should be flexible enough to accept an audio URL as a prop.",
             "dependencies": [],
             "details": "Create a new React component (e.g., `AudioPlayer.tsx`). This component should accept an `audioUrl` prop (string). Implement an HTML5 `<audio>` element within the component, setting its `src` attribute to `audioUrl` and including the `controls` attribute for basic playback controls. Consider minimal styling for integration.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a temporary test page or a Storybook entry to render the `AudioPlayer` component. Provide a sample audio URL (e.g., a public MP3 file) and verify that the player renders correctly and audio playback functions as expected."
           },
           {
@@ -2093,7 +2093,7 @@
               2
             ],
             "details": "1.  **Conditional UI:** In `StoryDetailPage.tsx`, add a 'Generate Audio' button. Implement logic to display this button only if the authenticated user is the owner of the story AND `story.audio_url` is not yet present. 2.  **Audio Generation Flow:** When the button is clicked, make an API call to the `POST /api/stories/:id/audio-generate` endpoint. Implement a loading state (e.g., disable button, show a spinner) while the request is in progress. Upon successful response, update the local story data in the frontend state to include the new `audio_url` received from the backend.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Log in as a story owner for a story without audio. Verify the 'Generate Audio' button is visible. Click the button and observe the loading state. Check network requests to confirm the API call. After success, verify the `story.audio_url` state updates in the frontend. Log in as a non-owner or for a story with existing audio to ensure the button is not visible."
           },
           {
@@ -2105,15 +2105,84 @@
               4
             ],
             "details": "1.  **Audio Player Integration:** In `StoryDetailPage.tsx`, conditionally render the `AudioPlayer` component (passing `story.audio_url` as a prop) when `story.audio_url` is present. This should replace the 'Generate Audio' button. 2.  **Error Handling:** Implement user-friendly error messages (e.g., toast notifications) if the audio generation API call fails. 3.  **User Experience:** Add a confirmation dialog before triggering the audio generation process, informing the user about potential costs or processing time.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test the full flow: 1. Story without audio: 'Generate Audio' button visible, click triggers confirmation, then generation, then player appears. 2. Story with existing audio: `AudioPlayer` component is immediately visible and playable. 3. Simulate API errors during generation to verify error messages are displayed. 4. Verify confirmation dialog functionality."
+          }
+        ]
+      },
+      {
+        "id": 105,
+        "title": "Improve Audio Generation UX with Asynchronous Processing",
+        "description": "Refactor the audio generation feature to be an asynchronous process to improve user experience. The UI will no longer block, and the generation status will be visible on story list and detail pages.",
+        "details": "This task involves modifying the backend to handle audio generation in the background and updating the frontend to reflect the various states of the generation process (in_progress, completed, failed) on both the story detail and list pages.Backend:1. Modify the existing audio generation endpoint (from Task 104) to immediately return a 202 Accepted status with a unique job ID.2. Implement a background processing mechanism (e.g., a message queue, a dedicated worker, or Deno Deploy's background tasks) to handle the actual audio generation (calling Google Gemini API) and Supabase storage.3. Add new columns to the `stories` table: `audio_generation_status` (e.g., ENUM: 'pending', 'in_progress', 'completed', 'failed') and `audio_generation_error` (TEXT) to store error messages.4. Update the `audio_generation_status` and `audio_url` (from Task 104) in the database as the background job progresses or completes.Frontend:1. Update `StoryDetailPage.tsx` to:a. Trigger the asynchronous audio generation API call.b. Immediately update the UI to display a 'Generating Audio...' or 'Pending' status.c. Implement polling (e.g., every 5-10 seconds) to the `/api/stories/:id` endpoint to fetch the latest `audio_generation_status`.d. Dynamically update the UI based on the status: show audio player if 'completed', show error message if 'failed', continue showing progress if 'in_progress'.2. Update `StoryListPage.tsx` (or relevant story list component) to display a concise indicator next to stories that have `audio_generation_status` other than 'completed' or 'null'.",
+        "testStrategy": "Backend Testing:1. Trigger audio generation for a story via the API. Verify the immediate response is 202 Accepted.2. Monitor the database to confirm `audio_generation_status` transitions correctly from 'null' to 'pending'/'in_progress' and then to 'completed' (or 'failed' if simulating an error).3. Verify that the `audio_url` is populated upon successful completion.4. Simulate an error during audio generation (e.g., invalid input, API failure) and verify `audio_generation_status` becomes 'failed' and `audio_generation_error` is populated.Frontend Testing:1. On the Story Detail Page:a. Click the 'Generate Audio' button. Verify the UI immediately changes to a 'Generating...' state and does not block.b. Observe the UI as the background process completes; verify it transitions to display the audio player.c. Refresh the page while generation is in progress; verify the correct status is loaded and displayed.d. Test with a story where generation fails; verify an appropriate error message is displayed.2. On the Story List Page:a. Verify that stories with pending or in-progress audio generation display a visual indicator of their status.b. Verify that stories with completed audio generation show the audio icon/link.c. Verify that stories with failed audio generation show an error indicator.",
+        "status": "done",
+        "dependencies": [
+          104,
+          103
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Backend: Add audio_status column to stories table",
+            "description": "Add a new column to the 'stories' table to track the status of audio generation. The status can be 'not_started', 'in_progress', 'completed', or 'failed'.",
+            "details": "Use Supabase Studio or a SQL migration to add an 'audio_status' column of type TEXT or an ENUM to the 'stories' table. Set a default value of 'not_started'.",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 105
+          },
+          {
+            "id": 2,
+            "title": "Backend: Convert audio generation to an async process",
+            "description": "Modify the 'POST /api/stories/:id/audio-generate' endpoint to trigger a background job for audio generation and return immediately.",
+            "details": "When the endpoint is called, update the story's 'audio_status' to 'in_progress'. Instead of waiting for the audio to be generated, trigger a background process (e.g., using a queue or a serverless function) to handle the generation. The endpoint should immediately return a 202 Accepted response.",
+            "status": "done",
+            "dependencies": [
+              "105.1"
+            ],
+            "parentTaskId": 105
+          },
+          {
+            "id": 3,
+            "title": "Backend: Update story endpoint to include audio status",
+            "description": "Update the 'GET /api/stories/:id' endpoint to include the 'audio_status' and 'audio_url' fields.",
+            "details": "The existing 'GET /api/stories/:id' endpoint should be updated to return the 'audio_status' and 'audio_url' fields along with other story data. This will be used by the frontend to poll for updates.",
+            "status": "done",
+            "dependencies": [
+              "105.1"
+            ],
+            "parentTaskId": 105
+          },
+          {
+            "id": 4,
+            "title": "Frontend: Update StoryDetailPage UI for async audio generation",
+            "description": "Update the story detail page to handle the asynchronous audio generation flow.",
+            "details": "In 'StoryDetailPage.tsx', when the 'Generate Audio' button is clicked, show a 'Generating...' message and disable the button. Start polling the 'GET /api/stories/:id' endpoint. If 'audio_status' is 'in_progress', continue showing the message. If 'completed', display the audio player. If 'failed', show an error message. The polling should stop once a final status is reached.",
+            "status": "done",
+            "dependencies": [
+              "105.2",
+              "105.3"
+            ],
+            "parentTaskId": 105
+          },
+          {
+            "id": 5,
+            "title": "Frontend: Display audio status on StoryListPage",
+            "description": "Update the story list page to show the audio generation status for each story.",
+            "details": "In the story list component, fetch and display the 'audio_status' for each story. Use an icon or a text label to indicate the status (e.g., a spinner for 'in_progress', a play icon for 'completed').",
+            "status": "done",
+            "dependencies": [
+              "105.3"
+            ],
+            "parentTaskId": 105
           }
         ]
       }
     ],
     "metadata": {
       "created": "2025-06-27T15:43:05.337Z",
-      "updated": "2025-07-02T13:13:40.264Z",
+      "updated": "2025-07-03T01:50:01.656Z",
       "description": "Tasks for master context"
     }
   }

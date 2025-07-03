@@ -216,17 +216,23 @@ posts.post('/:id/generate-audio', authMiddleware, async (c) => {
   }
 
   try {
-    const updatedStory = await generateStoryAudio(c, id, user.id, validationResult.data.voice);
-    return c.json({ story: updatedStory, message: '音声ファイルを生成しました。' });
+    // [デバッグ] 非同期処理を待機して、実行されるか確認する
+    console.log(`[Router] Calling generateStoryAudio for story ${id} and awaiting...`);
+    await generateStoryAudio(c, id, user.id, validationResult.data.voice);
+    console.log(`[Router] Finished awaiting generateStoryAudio for story ${id}.`);
+
+    // 完了したことを示す 200 OK を返す
+    return c.json({ message: '音声の生成が完了しました。' }, 200);
   } catch (error: unknown) {
-    console.error(`Error generating audio for story ${id}:`, error);
+    console.error(`Error starting audio generation for story ${id}:`, error);
     const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
 
+    // 同期的に発生しうるエラー（物語が見つからない、権限がないなど）をハンドリング
     if (errorMessage.includes('見つからないか') || errorMessage.includes('権限がありません')) {
       return c.json({ error: errorMessage }, 404);
     }
 
-    return c.json({ error: `音声の生成に失敗しました: ${errorMessage}` }, 500);
+    return c.json({ error: `音声生成の開始に失敗しました: ${errorMessage}` }, 500);
   }
 });
 

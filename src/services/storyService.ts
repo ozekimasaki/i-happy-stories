@@ -258,7 +258,7 @@ export const getStoriesByUserId = async (c: Context, userId: string) => {
   const { data, error } = await supabase
     .from('stories')
     .select(`
-      id, title, content, created_at, is_public, published_at,
+      id, title, content, created_at, is_public, published_at, audio_status,
       illustrations ( id, image_url, prompt ),
       audios ( id, audio_url, voice_name )
     `)
@@ -285,12 +285,18 @@ export const getStoryById = async (c: Context, storyId: number) => {
       is_public,
       published_at,
       user_id,
+      audio_status,
       illustrations (
         id,
         image_url,
         prompt
       ),
-      audios (*)
+      audios (
+        id,
+        audio_url,
+        voice_name,
+        created_at
+      )
     `)
     .eq('id', storyId)
     .single();
@@ -489,15 +495,14 @@ function createWavFile(pcmData: Buffer): Buffer {
   return buffer;
 }
 
-export const generateStoryAudio = async (c: Context, storyId: number, userId: string, voice: string): Promise<Story> => {
+export const generateStoryAudio = async (c: Context, storyId: number, userId: string, voice: string): Promise<void> => {
   const supabase = getSupabase(c);
-  const genAI = getGeminiClient(c);
   const supabaseAdmin = createClient(c.env.SUPABASE_URL!, c.env.SUPABASE_SERVICE_ROLE_KEY!)
 
   // 1. Fetch the story to ensure ownership and get content
   const { data: story, error: storyError } = await supabase
     .from('stories')
-    .select('title, content, user_id')
+    .select('title, content, user_id, audio_status') // Select audio_status as well
     .eq('id', storyId)
     .single();
 
@@ -510,128 +515,121 @@ export const generateStoryAudio = async (c: Context, storyId: number, userId: st
     throw new Error('この物語の音声を生成する権限がありません。');
   }
 
-  // 2. Generate audio using Gemini API
-  console.log(`Generating audio for story ${storyId} with voice ${voice}...`);
+  if (story.audio_status === 'in_progress') {
+    console.log(`Audio generation for story ${storyId} is already in progress.`);
+    // The controller should return a 409 Conflict. For now, we just exit.
+    return; 
+  }
+
+  // 2. Immediately update status to 'in_progress'
+  const { error: updateError } = await supabaseAdmin
+    .from('stories')
+    .update({ 
+      audio_status: 'in_progress'
+    })
+    .eq('id', storyId);
+
+  if (updateError) {
+    console.error(`Failed to update story status to in_progress for story ${storyId}:`, updateError);
+    throw new Error('音声生成プロセスの開始に失敗しました。');
+  }
   
-  let pcmBuffer: Buffer;
-  try {
-    const ttsModelName = "gemini-2.5-pro-preview-tts"; 
+  // 3. Perform long-running audio generation in the background
+  const backgroundTask = async () => {
+    console.log(`[BackgroundTask] Starting audio generation for story ${storyId}`);
+    try {
+      const genAI = getGeminiClient(c);
+        // 3a. Generate audio using Gemini API
+        console.log(`Generating audio for story ${storyId} with voice ${voice}...`);
+        
+        const ttsModelName = "gemini-2.5-flash-preview-tts"; 
 
-    const response = await genAI.models.generateContent({
-        model: ttsModelName,
-        contents: [{ parts: [{ text: `
-# Voice Generation Brief: The Gentle Storyteller
+      const response = await genAI.models.generateContent({
+          model: ttsModelName,
+          contents: [{ parts: [{ text: `Read the following story as if you are reading a picture book to a young child. Use a gentle, warm, and friendly voice to make the listener feel safe and comforted. Speak at a calm, gentle, and slightly slower pace than usual, so that each word is easy for a young child to follow and understand, but the narration feels natural and pleasant. Use expressive intonation and changes in tone to match the emotions and scenes of the story. Change your voice for each character to reflect their personality and feelings. Emphasize the title and the names of characters. Take short, natural pauses after the title, between sentences, at scene changes, and after important moments, so the listener can enjoy and absorb the story. Narrate as if you are making eye contact and engaging directly with the child, inviting them into the story world. Make the experience soothing, enjoyable, and memorable, as if you are enjoying the story together.
 
-## 1. Persona
-You are a kind and gentle storyteller. Your voice is warm, clear, and reassuring. Your goal is to read a story to a child in a way that is engaging and comforting, making them feel safe and loved.
-
-## 2. Core Mission
-Create a pleasant and calming listening experience. The narration should be soothing, but still feel natural and engaging, like a real person telling a story.
-
-## 3. Vocal Technique
-
-### A. Vocal Quality & Tone
-- **Voice:** A **soft and clear** voice. Maintain a gentle, lower-volume tone, but avoid an overly breathy whisper.
-- **Warmth:** Your voice should be filled with genuine warmth and kindness.
-
-### B. Pacing & Rhythm
-- **Pacing:** A **calm, natural pace**. Speak clearly and unhurriedly, as if you're telling a story to a friend. Avoid speaking too slowly or too quickly.
-- **Pauses:** Use **natural pauses** between sentences to give the listener a moment to imagine the scene. The pauses should feel comfortable, not overly dramatic or long.
-- **Rhythm:** Maintain a smooth, conversational rhythm.
-
-### C. Emotional Connection
-- **Affection:** Let a sense of gentle affection and care come through in your voice.
-- **Presence:** Speak in a way that feels personal and direct, as if you are in the room with the listener.
-
-## 4. Final Instruction
-With these principles in mind, please read the following story. Embody the persona of the Gentle Storyteller and create a narration that is both comforting and enjoyable.
-
-**The Story:**
 ${story.title}
 
-${story.content}
-` }] }],
-        config: {
-            responseModalities: ['AUDIO'],
-            speechConfig: {
-                voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: voice },
-                },
-            },
-        },
-    });
+${story.content}` }] }],
+          config: {
+              responseModalities: ['AUDIO'],
+              speechConfig: {
+                  voiceConfig: {
+                      prebuiltVoiceConfig: { voiceName: voice },
+                  },
+              },
+          },
+      });
 
-    const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!data) {
-        console.error('Gemini API response did not contain audio data:', response);
-        throw new Error('Gemini APIから音声データを取得できませんでした。');
+      const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!data) {
+          throw new Error('Gemini APIから音声データを取得できませんでした。');
+      }
+      const pcmBuffer = Buffer.from(data, 'base64');
+
+      // 3b. Manually create WAV file buffer from PCM data
+      const wavBuffer = createWavFile(pcmBuffer);
+
+      // 3c. Upload audio to Supabase Storage
+      const filePath = `public/${storyId}-${Date.now()}.wav`;
+      const { error: uploadError } = await supabaseAdmin.storage
+          .from('audio')
+          .upload(filePath, wavBuffer, {
+              contentType: 'audio/wav',
+              upsert: false,
+          });
+
+      if (uploadError) {
+          throw new Error(`Supabase Storageへの音声アップロード中にエラーが発生しました: ${uploadError.message}`);
+      }
+
+      // 3d. Get public URL
+      const { data: publicUrlData } = supabaseAdmin.storage
+          .from('audio')
+          .getPublicUrl(filePath);
+
+      if (!publicUrlData) {
+          throw new Error('音声ファイルの公開URLの取得に失敗しました。');
+      }
+      const audioUrl = publicUrlData.publicUrl;
+
+      // 3e. Insert into audios table (for history/multiple voices)
+      const { error: insertAudioError } = await supabaseAdmin
+          .from('audios')
+          .insert({
+              story_id: storyId,
+              audio_url: audioUrl,
+              voice_name: voice,
+          });
+
+      if (insertAudioError) {
+          await supabaseAdmin.storage.from('audio').remove([filePath]);
+          throw new Error(`audiosテーブルへの挿入中にエラーが発生しました: ${insertAudioError.message}`);
+      }
+
+      // 3f. Update story with final status
+      const { error: finalUpdateError } = await supabaseAdmin
+        .from('stories')
+        .update({ audio_status: 'completed' })
+        .eq('id', storyId);
+
+      if (finalUpdateError) {
+        throw new Error(`物語の最終ステータス更新中にエラーが発生しました: ${finalUpdateError.message}`);
+      }
+
+      console.log(`Successfully generated audio for story ${storyId}.`);
+
+    } catch (error) {
+      console.error(`Error generating audio for story ${storyId}:`, error);
+      await supabaseAdmin.from('stories').update({ audio_status: 'failed' }).eq('id', storyId);
     }
-    pcmBuffer = Buffer.from(data, 'base64');
-  } catch (error) {
-      console.error(`Gemini APIでの音声生成中にエラーが発生しました (story ${storyId}):`, error);
-      throw new Error('音声の生成に失敗しました。');
-  }
+  };
 
-  // 3. Manually create WAV file buffer from PCM data
-  const wavBuffer = createWavFile(pcmBuffer);
-
-  // 4. Upload audio to Supabase Storage
-  const filePath = `public/${storyId}-${Date.now()}.wav`; // Add timestamp to avoid overwriting
-  const { error: uploadError } = await supabaseAdmin.storage
-      .from('audio')
-      .upload(filePath, wavBuffer, {
-          contentType: 'audio/wav',
-          upsert: false, // Use unique filenames instead of upserting
-      });
-
-  if (uploadError) {
-      console.error(`Supabase Storageへの音声アップロード中にエラーが発生しました (story ${storyId}):`, uploadError);
-      throw new Error('音声ファイルの保存に失敗しました。');
-  }
-
-  // 5. Get public URL and insert into audios table
-  const { data: publicUrlData } = supabaseAdmin.storage
-      .from('audio')
-      .getPublicUrl(filePath);
-
-  if (!publicUrlData) {
-      throw new Error('音声ファイルの公開URLの取得に失敗しました。');
-  }
-  const audioUrl = publicUrlData.publicUrl;
-
-  const { error: insertAudioError } = await supabaseAdmin
-      .from('audios')
-      .insert({
-          story_id: storyId,
-          audio_url: audioUrl,
-          voice_name: voice,
-      });
-
-  if (insertAudioError) {
-      console.error(`Supabase audiosテーブルへの挿入中にエラーが発生しました (story ${storyId}):`, insertAudioError);
-      // Attempt to delete the orphaned file from storage
-      await supabaseAdmin.storage.from('audio').remove([filePath]);
-      throw new Error('音声情報の保存に失敗しました。');
-  }
-
-  // 6. Fetch the updated story with the new audio relation
-  const { data: updatedStory, error: fetchStoryError } = await supabase
-      .from('stories')
-      .select('*, illustrations(*), audios(*)')
-      .eq('id', storyId)
-      .single();
-
-  if (fetchStoryError) {
-      console.error(`更新後の物語データの取得中にエラーが発生しました (story ${storyId}):`, fetchStoryError);
-      throw new Error('更新後の物語データの取得に失敗しました。');
-  }
-
-  if (!updatedStory) {
-      throw new Error('更新後の物語データが見つかりません。');
-  }
-
-  return updatedStory;
+    console.log(`[DEBUG] About to call waitUntil for story ${storyId}`);
+  c.executionCtx.waitUntil(backgroundTask());
+  console.log(`[DEBUG] Called waitUntil for story ${storyId}`);
 };
+
 
 export const publishStory = async (c: Context, storyId: number, userId: string) => {
   const supabase = getSupabase(c);

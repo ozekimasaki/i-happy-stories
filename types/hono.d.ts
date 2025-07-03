@@ -15,6 +15,8 @@ export type Story = {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  audio_url: string | null;
+  audio_status: 'not_started' | 'in_progress' | 'completed' | 'failed';
   illustrations: Illustration[];
   audios: Audio[];
 };

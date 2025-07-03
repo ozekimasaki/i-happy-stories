@@ -3,9 +3,33 @@ import { useAuthStore } from '@/stores/authStore';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import type { Story } from 'types/hono';
+import { PlayCircle, Loader2, AlertTriangle } from 'lucide-react';
 
-
-
+const AudioStatusIcon: React.FC<{ status: Story['audio_status'] }> = ({ status }) => {
+  switch (status) {
+    case 'in_progress':
+      return (
+        <div title="音声生成中">
+          <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+        </div>
+      );
+    case 'completed':
+      return (
+        <div title="音声あり">
+          <PlayCircle className="h-5 w-5 text-green-500" />
+        </div>
+      );
+    case 'failed':
+      return (
+        <div title="音声の生成に失敗しました">
+          <AlertTriangle className="h-5 w-5 text-red-500" />
+        </div>
+      );
+    case 'not_started':
+    default:
+      return null;
+  }
+};
 
 const StoriesPage: React.FC = () => {
   const [stories, setStories] = useState<Story[]>([]);
@@ -74,7 +98,10 @@ const StoriesPage: React.FC = () => {
               <div className="h-full flex flex-col bg-white border border-stone-200 rounded-lg group-hover:border-amber-400 transition-colors duration-200 overflow-hidden">
                 <div className="p-4">
                   <div className="flex justify-between items-center gap-2">
-                    <h2 className="text-lg font-bold truncate text-stone-800 flex-1">{story.title}</h2>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <h2 className="text-lg font-bold truncate text-stone-800">{story.title}</h2>
+                      <AudioStatusIcon status={story.audio_status} />
+                    </div>
                     {story.is_public && (
                       <Link 
                         to={`/stories/${story.id}`} 
