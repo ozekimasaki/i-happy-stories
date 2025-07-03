@@ -1,6 +1,8 @@
 import { Context } from 'hono';
+import type { Env, AudioGenerationMessage } from '../../types/worker';
+import type { Queue } from '@cloudflare/workers-types';
 import { getSupabase } from '../lib/supabase';
-import { getGeminiClient } from '../lib/geminiClient';
+import { initializeGeminiClientFromEnv, getGeminiClient } from '../lib/geminiClient';
 import { Story } from '../../types/hono';
 import { Buffer } from 'node:buffer';
 import { createClient } from '@supabase/supabase-js';
@@ -506,14 +508,122 @@ function createWavFile(pcmData: Buffer): Buffer {
   return buffer;
 }
 
-export const generateStoryAudio = async (c: Context, storyId: number, userId: string, voice: string): Promise<void> => {
-  const supabase = getSupabase(c);
-  const supabaseAdmin = createClient(c.env.SUPABASE_URL!, c.env.SUPABASE_SERVICE_ROLE_KEY!)
+// This is the new function that will be called by the queue consumer.
+// It contains the logic that was previously in the backgroundTask.
+// This is the new function that will be called by the queue consumer.
+// It now accepts the environment and the message directly.
+export const processAudioGenerationTask = async (
+  env: Env,
+  message: AudioGenerationMessage
+) => {
+  const { storyId, voice } = message;
+  const supabaseAdmin = createClient(env.SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!);
+  console.log(`[QueueConsumer] Starting audio generation for story ${storyId}`);
 
-  // 1. Fetch the story to ensure ownership and get content
+  try {
+    // Fetch story content again inside the consumer
+    const { data: story, error: storyError } = await supabaseAdmin
+      .from('stories')
+      .select('title, content')
+      .eq('id', storyId)
+      .single();
+
+    if (storyError || !story) {
+      throw new Error(`Story ${storyId} not found in consumer.`);
+    }
+
+    const genAI = initializeGeminiClientFromEnv(env);
+    const ttsModelName = "gemini-2.5-flash-preview-tts";
+
+    const response = await genAI.models.generateContent({
+      model: ttsModelName,
+      contents: [{ parts: [{ text: `Read the following story in a gentle, warm, and calming voice, like a bedtime story for a child. Speak slowly and softly. Pause naturally between sentences. Your voice should be soothing and reassuring, helping the listener feel safe and ready to sleep.\n\n---\nText to read:\n\n${story.title}\n\n${story.content}` }] }],
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          languageCode: 'ja-JP',
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: voice },
+          },
+        },
+      },
+    });
+
+    const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!data) {
+      throw new Error('Gemini APIから音声データを取得できませんでした。');
+    }
+    const pcmBuffer = Buffer.from(data, 'base64');
+    const wavBuffer = createWavFile(pcmBuffer);
+
+    const filePath = `public/${storyId}-${Date.now()}.wav`;
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('audio')
+      .upload(filePath, wavBuffer, {
+        contentType: 'audio/wav',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw new Error(`Supabase Storageへの音声アップロード中にエラーが発生しました: ${uploadError.message}`);
+    }
+
+    const { data: publicUrlData } = supabaseAdmin.storage
+      .from('audio')
+      .getPublicUrl(filePath);
+
+    if (!publicUrlData) {
+      throw new Error('音声ファイルの公開URLの取得に失敗しました。');
+    }
+    const audioUrl = publicUrlData.publicUrl;
+
+    const { error: insertAudioError } = await supabaseAdmin
+      .from('audios')
+      .insert({
+        story_id: storyId,
+        audio_url: audioUrl,
+        voice_name: voice,
+      });
+
+    if (insertAudioError) {
+      await supabaseAdmin.storage.from('audio').remove([filePath]);
+      throw new Error(`audiosテーブルへの挿入中にエラーが発生しました: ${insertAudioError.message}`);
+    }
+
+    await supabaseAdmin
+      .from('stories')
+      .update({ audio_status: 'completed' })
+      .eq('id', storyId);
+
+    console.log(`[QueueConsumer] Successfully generated audio for story ${storyId}.`);
+
+  } catch (error) {
+    console.error(`[QueueConsumer] Error generating audio for story ${storyId}:`, error);
+    await supabaseAdmin.from('stories').update({ audio_status: 'failed' }).eq('id', storyId);
+    // Re-throw the error to let the queue know the job failed, so it can be retried or sent to a Dead-Letter Queue.
+    throw error;
+  }
+};
+
+
+// This is the modified "producer" function.
+// It now sends a message to the queue instead of running the task directly.
+export const generateStoryAudio = async (c: Context, storyId: number, userId: string, voice: string): Promise<void> => {
+  // The queue binding should be available on `c.env`.
+  // You must bind a queue to this worker in your `wrangler.toml` file
+  // and name it `AUDIO_QUEUE`.
+  const queue = c.env.AUDIO_QUEUE as Queue;
+  if (!queue) {
+    console.error("Queue binding 'AUDIO_QUEUE' not found. Please configure it in wrangler.toml.");
+    throw new Error("サーバー設定エラー: 音声生成キューが利用できません。");
+  }
+  
+  const supabase = getSupabase(c);
+
+  // 1. Fetch the story to ensure ownership and check status
   const { data: story, error: storyError } = await supabase
     .from('stories')
-    .select('title, content, user_id, audio_status') // Select audio_status as well
+    .select('user_id, audio_status')
     .eq('id', storyId)
     .single();
 
@@ -526,125 +636,37 @@ export const generateStoryAudio = async (c: Context, storyId: number, userId: st
     throw new Error('この物語の音声を生成する権限がありません。');
   }
 
-  if (story.audio_status === 'in_progress') {
-    console.log(`Audio generation for story ${storyId} is already in progress.`);
-    // The controller should return a 409 Conflict. For now, we just exit.
-    return; 
+  if (story.audio_status === 'in_progress' || story.audio_status === 'queued') {
+    console.log(`Audio generation for story ${storyId} is already in progress or queued.`);
+    // The controller should return a 409 Conflict.
+    return;
   }
 
-  // 2. Immediately update status to 'in_progress'
+  // 2. Update status to 'queued'
+  // Use supabaseAdmin for this to bypass RLS if needed, assuming the check above is sufficient.
+  const supabaseAdmin = createClient(c.env.SUPABASE_URL!, c.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { error: updateError } = await supabaseAdmin
     .from('stories')
-    .update({ 
-      audio_status: 'in_progress'
-    })
+    .update({ audio_status: 'queued' }) // Use 'queued' status
     .eq('id', storyId);
 
   if (updateError) {
-    console.error(`Failed to update story status to in_progress for story ${storyId}:`, updateError);
+    console.error(`Failed to update story status to queued for story ${storyId}:`, updateError);
     throw new Error('音声生成プロセスの開始に失敗しました。');
   }
-  
-  // 3. Perform long-running audio generation in the background
-  const backgroundTask = async () => {
-    console.log(`[BackgroundTask] Starting audio generation for story ${storyId}`);
-    try {
-      const genAI = getGeminiClient(c);
-        // 3a. Generate audio using Gemini API
-        console.log(`Generating audio for story ${storyId} with voice ${voice}...`);
-        
-        const ttsModelName = "gemini-2.5-flash-preview-tts"; 
 
-      const response = await genAI.models.generateContent({
-          model: ttsModelName,
-          contents: [{ parts: [{ text: `Read the following story in a gentle, warm, and calming voice, like a bedtime story for a child. Speak slowly and softly. Pause naturally between sentences. Your voice should be soothing and reassuring, helping the listener feel safe and ready to sleep.
-
----
-Text to read:
-
-${story.title}
-
-${story.content}` }] }],
-          config: {
-              responseModalities: ['AUDIO'],
-              speechConfig: {
-                  languageCode: 'ja-JP',
-                  voiceConfig: {
-                      prebuiltVoiceConfig: { voiceName: voice },
-                  },
-              },
-          },
-      });
-
-      const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      if (!data) {
-          throw new Error('Gemini APIから音声データを取得できませんでした。');
-      }
-      const pcmBuffer = Buffer.from(data, 'base64');
-
-      // 3b. Manually create WAV file buffer from PCM data
-      const wavBuffer = createWavFile(pcmBuffer);
-
-      // 3c. Upload audio to Supabase Storage
-      const filePath = `public/${storyId}-${Date.now()}.wav`;
-      const { error: uploadError } = await supabaseAdmin.storage
-          .from('audio')
-          .upload(filePath, wavBuffer, {
-              contentType: 'audio/wav',
-              upsert: false,
-          });
-
-      if (uploadError) {
-          throw new Error(`Supabase Storageへの音声アップロード中にエラーが発生しました: ${uploadError.message}`);
-      }
-
-      // 3d. Get public URL
-      const { data: publicUrlData } = supabaseAdmin.storage
-          .from('audio')
-          .getPublicUrl(filePath);
-
-      if (!publicUrlData) {
-          throw new Error('音声ファイルの公開URLの取得に失敗しました。');
-      }
-      const audioUrl = publicUrlData.publicUrl;
-
-      // 3e. Insert into audios table (for history/multiple voices)
-      const { error: insertAudioError } = await supabaseAdmin
-          .from('audios')
-          .insert({
-              story_id: storyId,
-              audio_url: audioUrl,
-              voice_name: voice,
-          });
-
-      if (insertAudioError) {
-          await supabaseAdmin.storage.from('audio').remove([filePath]);
-          throw new Error(`audiosテーブルへの挿入中にエラーが発生しました: ${insertAudioError.message}`);
-      }
-
-      // 3f. Update story with final status
-      const { error: finalUpdateError } = await supabaseAdmin
-        .from('stories')
-        .update({ audio_status: 'completed' })
-        .eq('id', storyId);
-
-      if (finalUpdateError) {
-        throw new Error(`物語の最終ステータス更新中にエラーが発生しました: ${finalUpdateError.message}`);
-      }
-
-      console.log(`Successfully generated audio for story ${storyId}.`);
-
-    } catch (error) {
-      console.error(`Error generating audio for story ${storyId}:`, error);
-      await supabaseAdmin.from('stories').update({ audio_status: 'failed' }).eq('id', storyId);
-    }
+  // 3. Send a message to the queue
+  // We don't need to send the userId, as the consumer will run with admin rights.
+  // Ownership was already checked.
+  const message = {
+    storyId,
+    voice,
   };
 
-    console.log(`[DEBUG] About to call waitUntil for story ${storyId}`);
-  c.executionCtx.waitUntil(backgroundTask());
-  console.log(`[DEBUG] Called waitUntil for story ${storyId}`);
-};
+  await queue.send(message);
 
+  console.log(`[Producer] Successfully queued audio generation for story ${storyId}.`);
+};
 
 export const publishStory = async (c: Context, storyId: number, userId: string) => {
   const supabase = getSupabase(c);

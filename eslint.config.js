@@ -41,6 +41,10 @@ export default [
         "warn",
         { allowConstantExport: true },
       ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { "argsIgnorePattern": "^_" },
+      ],
     },
     settings: {
       react: {

@@ -216,13 +216,11 @@ posts.post('/:id/generate-audio', authMiddleware, async (c) => {
   }
 
   try {
-    // [デバッグ] 非同期処理を待機して、実行されるか確認する
-    console.log(`[Router] Calling generateStoryAudio for story ${id} and awaiting...`);
+    // Send a message to the queue to generate the audio asynchronously.
     await generateStoryAudio(c, id, user.id, validationResult.data.voice);
-    console.log(`[Router] Finished awaiting generateStoryAudio for story ${id}.`);
 
-    // 完了したことを示す 200 OK を返す
-    return c.json({ message: '音声の生成が完了しました。' }, 200);
+    // Return a 202 Accepted response to indicate that the request has been accepted for processing.
+    return c.json({ message: '音声生成のリクエストを受け付けました。処理には数分かかる場合があります。' }, 202);
   } catch (error: unknown) {
     console.error(`Error starting audio generation for story ${id}:`, error);
     const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';

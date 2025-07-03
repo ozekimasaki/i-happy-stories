@@ -85,7 +85,7 @@ export const deleteAudio = async (audioId: number): Promise<{ success: boolean }
   return response.json();
 };
 
-export const generateAudio = async (id: number, voice: string): Promise<Story> => {
+export const generateAudio = async (id: number, voice: string): Promise<{ message: string }> => {
   const headers = getAuthHeaders();
   const response = await fetch(`/api/v1/posts/${id}/generate-audio`, {
     method: 'POST',
@@ -93,11 +93,12 @@ export const generateAudio = async (id: number, voice: string): Promise<Story> =
     body: JSON.stringify({ voice }),
   });
 
+  // APIからの応答の型を明示的に定義する
+  const data: { message: string; error?: string } = await response.json();
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({})) as { error?: string };
-    throw new Error(errorData?.error || '音声の生成に失敗しました。');
+    throw new Error(data.error || '音声の生成リクエストに失敗しました。');
   }
 
-  const data = await response.json() as { story: Story };
-  return data.story;
+  return data;
 };

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import type React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { useStoryStore } from '@/stores/storyStore';
 import { toast } from 'sonner';
 import type { Story } from 'types/hono';
 import { getStory, publishStory, unpublishStory, generateAudio, deleteAudio } from '@/lib/apiClient';
@@ -21,56 +22,87 @@ const StoryDetailPage: React.FC = () => {
   const [isAudioDeleteModalOpen, setIsAudioDeleteModalOpen] = useState(false);
   const [selectedAudio, setSelectedAudio] = useState<{ id: number; url: string } | null>(null);
   const { session } = useAuthStore();
+  const { updateStory } = useStoryStore();
   const navigate = useNavigate();
 
-  const fetchStoryDetail = useCallback(async () => {
+  const fetchStoryDetail = useCallback(async ({ isInitialLoad = false } = {}) => {
+    console.log(`[StoryDetail] Fetching story detail (isInitialLoad: ${isInitialLoad})`);
     if (!id) {
-      toast.error('物語のIDが見つかりません。');
-      setIsLoading(false);
+      if (isInitialLoad) {
+        toast.error('物語のIDが見つかりません。');
+        setIsLoading(false);
+      }
       return;
     }
+
+    if (isInitialLoad) setIsLoading(true);
+
     try {
       const storyData = await getStory(parseInt(id, 10));
-      setStory(storyData);
+      console.log('[StoryDetail] Fetched story data:', storyData);
+      setStory(prevStory => {
+        console.log('[StoryDetail] setStory. prevStory:', prevStory);
+        console.log('[StoryDetail] setStory. new storyData:', storyData);
+        if (prevStory?.audio_status === 'in_progress' && storyData.audio_status === 'not_started') {
+          console.log('[StoryDetail] Race condition detected. Keeping "in_progress" state.');
+          return prevStory;
+        }
+        return storyData;
+      });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : '予期せぬエラーが発生しました。';
-      toast.error(errorMessage);
-      setStory(null);
+      if (isInitialLoad) {
+        toast.error(errorMessage);
+        setStory(null);
+      } else {
+        console.error('Polling for story update failed:', error);
+      }
+    } finally {
+      if (isInitialLoad) setIsLoading(false);
     }
   }, [id]);
 
   useEffect(() => {
-    const initialFetch = async () => {
-      setIsLoading(true);
-      await fetchStoryDetail();
-      setIsLoading(false);
-    };
-    initialFetch();
+    fetchStoryDetail({ isInitialLoad: true });
   }, [id, fetchStoryDetail]);
 
   useEffect(() => {
+    console.log('[StoryDetail] Polling useEffect triggered. Status:', story?.audio_status);
     if (story?.audio_status === 'in_progress') {
+      console.log('[StoryDetail] Starting polling...');
       const interval = setInterval(() => {
-        fetchStoryDetail();
+        console.log('[StoryDetail] Polling...');
+        fetchStoryDetail({ isInitialLoad: false });
       }, 5000); // Poll every 5 seconds
 
-      return () => clearInterval(interval); // Cleanup on component unmount or status change
+      return () => {
+        console.log('[StoryDetail] Stopping polling.');
+        clearInterval(interval);
+      }
     }
   }, [story?.audio_status, fetchStoryDetail]);
 
   const handleGenerateAudio = async (voice: string) => {
+    console.log('[StoryDetail] handleGenerateAudio called.');
     if (!story) return;
 
     setIsGeneratingAudio(true);
     try {
-      await generateAudio(story.id, voice);
-      setStory(prev => prev ? { ...prev, audio_status: 'in_progress' } : null);
-      toast.success('音声の生成リクエストを受け付けました。処理には数分かかることがあります。');
+      const response = await generateAudio(story.id, voice);
+      console.log('[StoryDetail] generateAudio API response:', response);
+      const updatedFields = { id: story.id, audio_status: 'in_progress' as const };
+      console.log('[StoryDetail] Updating local state with:', updatedFields);
+      setStory(prev => prev ? { ...prev, ...updatedFields } : null);
+      console.log('[StoryDetail] Calling updateStory in global store with:', updatedFields);
+      updateStory(updatedFields);
+      toast.success(response.message);
       setIsAudioModalOpen(false);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '音声の生成に失敗しました。';
       toast.error(errorMessage);
       console.error('Failed to generate audio:', error);
+    } finally {
+      setIsGeneratingAudio(false);
     }
   };
 

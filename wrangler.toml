@@ -9,3 +9,10 @@ routes = [
 
 [site]
 bucket = "./dist"
+
+[[queues.producers]]
+binding = "AUDIO_QUEUE"
+queue = "monogatari-audio-queue"
+
+[[queues.consumers]]
+queue = "monogatari-audio-queue"
