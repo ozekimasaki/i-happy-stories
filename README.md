@@ -52,7 +52,7 @@
 | **Webフレームワーク**| [**Hono**](https://hono.dev/) | Workers上で動作する、高速で軽量なWebフレームワーク。 |
 | **データベース** | [**Supabase (Postgres)**](https://supabase.com/) | BaaS。DB、認証、ストレージ機能を提供。 |
 | **AIモデル** | [**Google Gemini**](https://ai.google.dev/) | 物語生成、プロンプト作成、音声合成（TTS）を担当。 |
-| **デプロイ** | [**Cloudflare Pages**](https://pages.cloudflare.com/) | 静的サイトのホスティングとWorkersのデプロイを統合。 |
+| **デプロイ** | [**Cloudflare Workers**](https://pages.cloudflare.com/) | 静的サイトのホスティングとWorkersのデプロイを統合。 |
 | **CLI** | [**Wrangler**](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare開発用のコマンドラインツール。 |
 
 ## 🧠 コアAIロジック
