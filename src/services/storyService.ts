@@ -546,7 +546,10 @@ export const generateStoryAudio = async (c: Context, storyId: number, userId: st
 
       const response = await genAI.models.generateContent({
           model: ttsModelName,
-          contents: [{ parts: [{ text: `Read the following story as if you are reading a picture book to a young child. Use a gentle, warm, and friendly voice to make the listener feel safe and comforted. Speak at a calm, gentle, and slightly slower pace than usual, so that each word is easy for a young child to follow and understand, but the narration feels natural and pleasant. Use expressive intonation and changes in tone to match the emotions and scenes of the story. Change your voice for each character to reflect their personality and feelings. Emphasize the title and the names of characters. Take short, natural pauses after the title, between sentences, at scene changes, and after important moments, so the listener can enjoy and absorb the story. Narrate as if you are making eye contact and engaging directly with the child, inviting them into the story world. Make the experience soothing, enjoyable, and memorable, as if you are enjoying the story together.
+          contents: [{ parts: [{ text: `Read the following story in a gentle, warm, and calming voice, like a bedtime story for a child. Speak slowly and softly. Pause naturally between sentences. Your voice should be soothing and reassuring, helping the listener feel safe and ready to sleep.
+
+---
+Text to read:
 
 ${story.title}
 
@@ -554,6 +557,7 @@ ${story.content}` }] }],
           config: {
               responseModalities: ['AUDIO'],
               speechConfig: {
+                  languageCode: 'ja-JP',
                   voiceConfig: {
                       prebuiltVoiceConfig: { voiceName: voice },
                   },
