@@ -50,7 +50,6 @@ export const useStoryStore = create<StoryState>((set, get) => ({
         story.id === updatedStory.id ? { ...story, ...updatedStory } : story
       ),
     }));
-    // Use get() to access the state after an update for logging
     console.log('[storyStore] Current stories state after update:', get().stories.map(s => ({ id: s.id, status: s.audio_status })));
   },
 }));

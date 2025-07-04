@@ -30,17 +30,22 @@ const StoryDetailPage: React.FC = () => {
     if (!id) {
       if (isInitialLoad) {
         toast.error('物語のIDが見つかりません。');
-        setIsLoading(false);
+        navigate('/');
       }
       return;
     }
 
-    if (isInitialLoad) setIsLoading(true);
-
     try {
       const storyData = await getStory(parseInt(id, 10));
       console.log('[StoryDetail] Fetched story data:', storyData);
+
       setStory(prevStory => {
+        // Update global store if status has changed during polling
+        if (prevStory && prevStory.audio_status !== storyData.audio_status) {
+          console.log(`[StoryDetail] Status changed from ${prevStory.audio_status} to ${storyData.audio_status}. Updating global store.`);
+          updateStory(storyData);
+        }
+
         console.log('[StoryDetail] setStory. prevStory:', prevStory);
         console.log('[StoryDetail] setStory. new storyData:', storyData);
         if (prevStory?.audio_status === 'in_progress' && storyData.audio_status === 'not_started') {
@@ -49,26 +54,26 @@ const StoryDetailPage: React.FC = () => {
         }
         return storyData;
       });
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : '予期せぬエラーが発生しました。';
+    } catch (error) {
+      console.error('Failed to fetch story detail:', error);
       if (isInitialLoad) {
-        toast.error(errorMessage);
-        setStory(null);
-      } else {
-        console.error('Polling for story update failed:', error);
+        toast.error('物語の取得に失敗しました。');
+        navigate('/');
       }
     } finally {
       if (isInitialLoad) setIsLoading(false);
     }
-  }, [id]);
+  }, [id, navigate, updateStory]);
 
   useEffect(() => {
     fetchStoryDetail({ isInitialLoad: true });
   }, [id, fetchStoryDetail]);
 
   useEffect(() => {
-    console.log('[StoryDetail] Polling useEffect triggered. Status:', story?.audio_status);
-    if (story?.audio_status === 'in_progress') {
+    const isProcessing = story?.audio_status === 'in_progress' || story?.audio_status === 'queued';
+    console.log(`[StoryDetail] Polling useEffect triggered. Status: ${story?.audio_status}, isProcessing: ${isProcessing}`);
+
+    if (isProcessing) {
       console.log('[StoryDetail] Starting polling...');
       const interval = setInterval(() => {
         console.log('[StoryDetail] Polling...');
@@ -78,7 +83,7 @@ const StoryDetailPage: React.FC = () => {
       return () => {
         console.log('[StoryDetail] Stopping polling.');
         clearInterval(interval);
-      }
+      };
     }
   }, [story?.audio_status, fetchStoryDetail]);
 
