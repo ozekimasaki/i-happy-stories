@@ -194,88 +194,102 @@ const StoryDetailPage: React.FC = () => {
   };
 
   const renderAudioSection = () => {
-    if (!isOwner) return null;
+    // storyがnullの場合は何も表示しない
+    if (!story) return null;
 
-    switch (story?.audio_status) {
-      case 'completed':
-        if (story.audios && story.audios.length > 0) {
+    const canViewAudio = story.is_public || isOwner;
+    const audioIsReady = story.audio_status === 'completed' && story.audios && story.audios.length > 0;
+
+    // Case 1: Audio is ready and user has permission to view it.
+    if (canViewAudio && audioIsReady) {
+      return (
+        <div className="my-6">
+          {story.audios.map((audio) => (
+            <div key={audio.id} className="flex items-center gap-2 mb-2">
+              <audio controls src={audio.audio_url} className="w-full">
+                Your browser does not support the audio element.
+              </audio>
+              {/* Show delete button only for the owner */}
+              {isOwner && (
+                <button
+                  onClick={() => {
+                    setSelectedAudio({ id: audio.id, url: audio.audio_url });
+                    setIsAudioDeleteModalOpen(true);
+                  }}
+                  className="p-2 text-stone-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                  aria-label="音声を削除"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Case 2: User is the owner, show management UI based on status.
+    if (isOwner) {
+      switch (story.audio_status) {
+        case 'completed': // This case now handles when audio is not ready (e.g., empty audios array)
           return (
             <div className="my-6">
-              {story.audios.map((audio) => (
-                <div key={audio.id} className="flex items-center gap-2 mb-2">
-                  <audio controls src={audio.audio_url} className="w-full">
-                    Your browser does not support the audio element.
-                  </audio>
-                  <button
-                    onClick={() => {
-                      setSelectedAudio({ id: audio.id, url: audio.audio_url });
-                      setIsAudioDeleteModalOpen(true);
-                    }}
-                    className="p-2 text-stone-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
-                    aria-label="音声を削除"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-              ))}
+              <button
+                onClick={() => setIsAudioModalOpen(true)}
+                className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                音声を生成
+              </button>
             </div>
           );
-        }
-        // Fallback if status is completed but no audio URL, which indicates an issue.
-        return (
-          <div className="my-6">
-            <button
-              onClick={() => setIsAudioModalOpen(true)}
-              className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              音声を生成
-            </button>
-          </div>
-        );
 
-      case 'in_progress':
-        return (
-          <div className="my-6">
-            <button
-              disabled
-              className="inline-flex items-center justify-center bg-stone-400 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto cursor-not-allowed"
-            >
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              音声を生成中です...
-            </button>
-            <p className="text-sm text-stone-500 mt-2">この処理は数分かかることがあります。ページを離れても生成は続行されます。</p>
-          </div>
-        );
+        case 'in_progress':
+          return (
+            <div className="my-6">
+              <button
+                disabled
+                className="inline-flex items-center justify-center bg-stone-400 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto cursor-not-allowed"
+              >
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                音声を生成中です...
+              </button>
+              <p className="text-sm text-stone-500 mt-2">この処理は数分かかることがあります。ページを離れても生成は続行されます。</p>
+            </div>
+          );
 
-      case 'failed':
-        return (
-          <div className="my-6">
-            <button
-              onClick={() => setIsAudioModalOpen(true)}
-              className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              音声の生成を再試行
-            </button>
-            <p className="text-sm text-red-500 mt-2">音声の生成に失敗しました。もう一度お試しください。</p>
-          </div>
-        );
+        case 'failed':
+          return (
+            <div className="my-6">
+              <button
+                onClick={() => setIsAudioModalOpen(true)}
+                className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                音声の生成を再試行
+              </button>
+              <p className="text-sm text-red-500 mt-2">音声の生成に失敗しました。もう一度お試しください。</p>
+            </div>
+          );
 
-      case 'not_started':
-      default:
-        return (
-          <div className="my-6">
-            <button
-              onClick={() => setIsAudioModalOpen(true)}
-              className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              音声を生成
-            </button>
-          </div>
-        );
+        case 'not_started':
+        default:
+          return (
+            <div className="my-6">
+              <button
+                onClick={() => setIsAudioModalOpen(true)}
+                className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full sm:w-auto"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                音声を生成
+              </button>
+            </div>
+          );
+      }
     }
+
+    // Otherwise, render nothing.
+    return null;
   };
 
   if (isLoading) {
