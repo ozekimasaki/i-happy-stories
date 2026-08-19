@@ -1,417 +1,107 @@
-# Task Master AI - Claude Code Integration Guide
+# AGENTS.md — I Happy Stories コーディングエージェント向けガイド
 
-## Essential Commands
+このリポジトリで作業するコーディングエージェント向けのガイドです。プロジェクト構成、実在するコマンド、コーディング規約、注意点をまとめています。ここに書かれている内容はすべて実際のコード・設定ファイル（`package.json` / `wrangler.toml` / `vite.config.ts` / `eslint.config.js` / `tsconfig.json`）に基づいています。
 
-### Core Workflow Commands
+## プロジェクト概要
+
+**I Happy Stories**（ものがたりWeavers）は、ユーザーの体験や感情を AI で物語・イラスト・読み聞かせ音声付きのデジタル絵本に変換する、セラピューティック・ストーリーテリング・プラットフォームです。
+
+- **アーキテクチャ**: 静的 SPA（React + Vite）+ サーバーレス API（Hono on Cloudflare Workers）
+- **データ / 認証 / ストレージ**: Supabase
+- **AI**: Google Gemini（物語生成・イラストプロンプト生成・TTS）
+- **非同期処理**: Cloudflare Queues（音声生成）
+
+フロントとバックエンドは同一リポジトリ内に同居し、フロントは Cloudflare Pages 相当の静的配信、API は同じ Worker（`src/worker.ts`）が `/api` 配下で処理します。
+
+## エントリポイント
+
+- **フロントエンド**: `index.html` → `src/main.tsx` → `src/App.tsx`（React Router のルート定義）
+- **バックエンド（Worker）**: `src/worker.ts`（`wrangler.toml` の `main`）
+  - `fetch` ハンドラ: `/api` に Hono の API（`src/routes/index.ts`）をマウントし、それ以外は `dist` の静的アセット + SPA フォールバック（`index.html`）を返す
+  - `queue` ハンドラ: `AUDIO_QUEUE`（`monogatari-audio-queue`）のメッセージを受け取り `processAudioGenerationTask` を実行
+
+## ディレクトリ構成
+
+```
+src/
+├── main.tsx              # React エントリ
+├── App.tsx               # ルーティング定義
+├── worker.ts             # Cloudflare Workers エントリ（fetch / queue）
+├── pages/                # 画面コンポーネント
+├── components/           # UI（layout / features / common）
+├── routes/               # Hono API（index → v1 → posts / users / auth）
+├── services/             # ドメインロジック（storyService, illustrationService, authService）
+├── schemas/              # Zod スキーマ（storySchema）
+├── middleware/           # 認証ミドルウェア（authMiddleware, optionalAuthMiddleware）
+├── stores/               # Zustand（authStore, storyStore）
+├── lib/                  # supabase / apiClient / geminiClient / utils
+├── env.d.ts              # Vite の型
+└── style.css
+types/                    # 追加の型定義（worker.ts の Env / メッセージ型など）
+public/                   # 静的アセット
+```
+
+API 構造は `src/routes/index.ts`（`/v1` をマウント）→ `src/routes/v1/index.ts`（`posts` / `users` / `auth` と `/me`）という階層です。エンドポイント一覧は `README.md` を参照してください。
+
+## セットアップ
+
+前提: Node.js `>=22.0.0`（`package.json` の `engines`、`.prototools` は `node = "~22"`）と **pnpm**（`pnpm-lock.yaml` を採用）。
 
 ```bash
-# Project Setup
-task-master init                                    # Initialize Task Master in current project
-task-master parse-prd .taskmaster/docs/prd.txt      # Generate tasks from PRD document
-task-master models --setup                        # Configure AI models interactively
-
-# Daily Development Workflow
-task-master list                                   # Show all tasks with status
-task-master next                                   # Get next available task to work on
-task-master show <id>                             # View detailed task information (e.g., task-master show 1.2)
-task-master set-status --id=<id> --status=done    # Mark task complete
-
-# Task Management
-task-master add-task --prompt="description" --research        # Add new task with AI assistance
-task-master expand --id=<id> --research --force              # Break task into subtasks
-task-master update-task --id=<id> --prompt="changes"         # Update specific task
-task-master update --from=<id> --prompt="changes"            # Update multiple tasks from ID onwards
-task-master update-subtask --id=<id> --prompt="notes"        # Add implementation notes to subtask
-
-# Analysis & Planning
-task-master analyze-complexity --research          # Analyze task complexity
-task-master complexity-report                      # View complexity analysis
-task-master expand --all --research               # Expand all eligible tasks
-
-# Dependencies & Organization
-task-master add-dependency --id=<id> --depends-on=<id>       # Add task dependency
-task-master move --from=<id> --to=<id>                       # Reorganize task hierarchy
-task-master validate-dependencies                            # Check for dependency issues
-task-master generate                                         # Update task markdown files (usually auto-called)
+pnpm install
 ```
 
-## Key Files & Project Structure
+環境変数（`.env.example` が必要なキーを列挙）:
 
-### Core Files
+- `GEMINI_API_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
-- `.taskmaster/tasks/tasks.json` - Main task data file (auto-managed)
-- `.taskmaster/config.json` - AI model configuration (use `task-master models` to modify)
-- `.taskmaster/docs/prd.txt` - Product Requirements Document for parsing
-- `.taskmaster/tasks/*.txt` - Individual task files (auto-generated from tasks.json)
-- `.env` - API keys for CLI usage
+Wrangler のローカル実行では、プロジェクトルートの `.dev.vars` にこれらを設定します（`.dev.vars` / `.env` は `.gitignore` 済み。**シークレットをコミットしないこと**）。
 
-### Claude Code Integration Files
-
-- `CLAUDE.md` - Auto-loaded context for Claude Code (this file)
-- `.claude/settings.json` - Claude Code tool allowlist and preferences
-- `.claude/commands/` - Custom slash commands for repeated workflows
-- `.mcp.json` - MCP server configuration (project-specific)
-
-### Directory Structure
-
-```
-project/
-├── .taskmaster/
-│   ├── tasks/              # Task files directory
-│   │   ├── tasks.json      # Main task database
-│   │   ├── task-1.md      # Individual task files
-│   │   └── task-2.md
-│   ├── docs/              # Documentation directory
-│   │   ├── prd.txt        # Product requirements
-│   ├── reports/           # Analysis reports directory
-│   │   └── task-complexity-report.json
-│   ├── templates/         # Template files
-│   │   └── example_prd.txt  # Example PRD template
-│   └── config.json        # AI models & settings
-├── .claude/
-│   ├── settings.json      # Claude Code configuration
-│   └── commands/         # Custom slash commands
-├── .env                  # API keys
-├── .mcp.json            # MCP configuration
-└── CLAUDE.md            # This file - auto-loaded by Claude Code
-```
-
-## MCP Integration
-
-Task Master provides an MCP server that Claude Code can connect to. Configure in `.mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "task-master-ai": {
-      "command": "npx",
-      "args": ["-y", "--package=task-master-ai", "task-master-ai"],
-      "env": {
-        "ANTHROPIC_API_KEY": "your_key_here",
-        "PERPLEXITY_API_KEY": "your_key_here",
-        "OPENAI_API_KEY": "OPENAI_API_KEY_HERE",
-        "GOOGLE_API_KEY": "GOOGLE_API_KEY_HERE",
-        "XAI_API_KEY": "XAI_API_KEY_HERE",
-        "OPENROUTER_API_KEY": "OPENROUTER_API_KEY_HERE",
-        "MISTRAL_API_KEY": "MISTRAL_API_KEY_HERE",
-        "AZURE_OPENAI_API_KEY": "AZURE_OPENAI_API_KEY_HERE",
-        "OLLAMA_API_KEY": "OLLAMA_API_KEY_HERE"
-      }
-    }
-  }
-}
-```
-
-### Essential MCP Tools
-
-```javascript
-help; // = shows available taskmaster commands
-// Project setup
-initialize_project; // = task-master init
-parse_prd; // = task-master parse-prd
-
-// Daily workflow
-get_tasks; // = task-master list
-next_task; // = task-master next
-get_task; // = task-master show <id>
-set_task_status; // = task-master set-status
-
-// Task management
-add_task; // = task-master add-task
-expand_task; // = task-master expand
-update_task; // = task-master update-task
-update_subtask; // = task-master update-subtask
-update; // = task-master update
-
-// Analysis
-analyze_project_complexity; // = task-master analyze-complexity
-complexity_report; // = task-master complexity-report
-```
-
-## Claude Code Workflow Integration
-
-### Standard Development Workflow
-
-#### 1. Project Initialization
+## 主要コマンド（すべて `package.json` に実在）
 
 ```bash
-# Initialize Task Master
-task-master init
-
-# Create or obtain PRD, then parse it
-task-master parse-prd .taskmaster/docs/prd.txt
-
-# Analyze complexity and expand tasks
-task-master analyze-complexity --research
-task-master expand --all --research
+pnpm dev          # Vite 開発サーバー（フロント）
+pnpm dev:worker   # wrangler dev --local（Worker/API）
+pnpm dev:all      # 上記2つを concurrently で同時起動
+pnpm build        # tsc（型チェック, noEmit）→ vite build
+pnpm preview      # ビルド済みフロントのプレビュー
+pnpm lint         # eslint .
+pnpm typegen      # wrangler types（worker-configuration.d.ts を生成）
 ```
 
-If tasks already exist, another PRD can be parsed (with new information only!) using parse-prd with --append flag. This will add the generated tasks to the existing list of tasks..
+- **開発**: 通常は `pnpm dev:all`。フロントは `http://localhost:5173`、API は `http://localhost:8787`。Vite の `server.proxy` により `/api` へのリクエストは自動で `localhost:8787` に転送されます（`vite.config.ts`）。
+- **型チェック**: 独立した `typecheck` スクリプトはありません。`pnpm build` が `tsc`（`tsconfig.json` は `noEmit: true`）を実行するので、これが型チェックを兼ねます。
+- **テスト**: テストフレームワーク・`test` スクリプトはこのリポジトリには存在しません（存在しないコマンドを実行しないこと）。
 
-#### 2. Daily Development Loop
+## コーディング規約
+
+- **言語 / 型**: TypeScript。`tsconfig.json` は `strict: true`、`noUnusedLocals` / `noUnusedParameters` / `noFallthroughCasesInSwitch` 有効。未使用変数はエラーになります（プレフィックス `_` で無視可能: ESLint の `argsIgnorePattern: "^_"`）。
+- **Lint**: ESLint flat config（`eslint.config.js`）。`@typescript-eslint`、`eslint-plugin-react`（jsx-runtime）、`react-hooks`、`react-refresh` を使用。`dist` / `node_modules` / `build` / `.wrangler/` は対象外。
+- **インポートエイリアス**: `@` は `src` を指す（`vite.config.ts` と `tsconfig.json` の `paths` で定義）。新規インポートは既存に倣うこと。
+- **スタイリング**: Tailwind CSS v4（`@tailwindcss/vite` プラグイン、`tailwind.config.js`）。
+- **状態管理**: Zustand（`src/stores`）。フォームは React Hook Form + Zod（`@hookform/resolvers`）。
+- **バリデーション**: API 入力は `src/schemas` の Zod スキーマで `safeParse` し、失敗時は 400 とエラー配列を返す（`src/routes/v1/posts.ts` のパターンに倣う）。
+- **API の慣習**: 認証は `authMiddleware`、公開物語も許可する取得系は `optionalAuthMiddleware`。ユーザー本人性・公開制御は Supabase の RLS に委ねる箇所がある（`posts.get('/:id')` のコメント参照）。エラーメッセージ・レスポンスは日本語。既存のエラーハンドリング（`c.json({ error }, status)`）に合わせる。
+- **コメント**: 既存コードは日本語コメントが中心。周囲のスタイルに合わせ、必要最小限にとどめる。
+
+## 注意点
+
+- **変更は最小限・スコープを限定**: 指示された範囲のみを変更し、UI/UX デザインや依存関係のバージョンを勝手に変更しない（リポジトリの `.cursor/rules` / `.windsurfrules` でも明記されています）。
+- **パッケージマネージャは pnpm**: `pnpm-lock.yaml` が正。`bun.lock` も存在しますが、ドキュメント・CI 上の標準は pnpm です。混在させないこと。
+- **シークレット厳禁**: `.dev.vars` / `.env` / `.env.production` は `.gitignore` 済み。キーをコード・コミット・ログに出力しない。
+- **Cloudflare 前提のコード**: `src/worker.ts` は `serveStatic` に `__STATIC_CONTENT_MANIFEST` を使い、`dist`（`pnpm build` の成果物）を配信します。ローカルで API を動かす前に必要に応じてビルドしてください。型は `pnpm typegen` で再生成できます。
+- **Task Master 関連ファイル**: `.taskmaster/` や `.cursor` / `.roo` などのエージェント設定が同梱されていますが、アプリ本体のコードではありません。`CLAUDE.md` / `GEMINI.md` には Task Master のワークフロー説明が含まれます。
+
+## 完了前チェックリスト
+
+コードを変更したら、コミット/PR 前に最低限以下を実行してください。
 
 ```bash
-# Start each session
-task-master next                           # Find next available task
-task-master show <id>                     # Review task details
-
-# During implementation, check in code context into the tasks and subtasks
-task-master update-subtask --id=<id> --prompt="implementation notes..."
-
-# Complete tasks
-task-master set-status --id=<id> --status=done
+pnpm lint     # 静的解析
+pnpm build    # 型チェック（tsc）+ ビルド
 ```
 
-#### 3. Multi-Claude Workflows
-
-For complex projects, use multiple Claude Code sessions:
-
-```bash
-# Terminal 1: Main implementation
-cd project && claude
-
-# Terminal 2: Testing and validation
-cd project-test-worktree && claude
-
-# Terminal 3: Documentation updates
-cd project-docs-worktree && claude
-```
-
-### Custom Slash Commands
-
-Create `.claude/commands/taskmaster-next.md`:
-
-```markdown
-Find the next available Task Master task and show its details.
-
-Steps:
-
-1. Run `task-master next` to get the next task
-2. If a task is available, run `task-master show <id>` for full details
-3. Provide a summary of what needs to be implemented
-4. Suggest the first implementation step
-```
-
-Create `.claude/commands/taskmaster-complete.md`:
-
-```markdown
-Complete a Task Master task: $ARGUMENTS
-
-Steps:
-
-1. Review the current task with `task-master show $ARGUMENTS`
-2. Verify all implementation is complete
-3. Run any tests related to this task
-4. Mark as complete: `task-master set-status --id=$ARGUMENTS --status=done`
-5. Show the next available task with `task-master next`
-```
-
-## Tool Allowlist Recommendations
-
-Add to `.claude/settings.json`:
-
-```json
-{
-  "allowedTools": [
-    "Edit",
-    "Bash(task-master *)",
-    "Bash(git commit:*)",
-    "Bash(git add:*)",
-    "Bash(npm run *)",
-    "mcp__task_master_ai__*"
-  ]
-}
-```
-
-## Configuration & Setup
-
-### API Keys Required
-
-At least **one** of these API keys must be configured:
-
-- `ANTHROPIC_API_KEY` (Claude models) - **Recommended**
-- `PERPLEXITY_API_KEY` (Research features) - **Highly recommended**
-- `OPENAI_API_KEY` (GPT models)
-- `GOOGLE_API_KEY` (Gemini models)
-- `MISTRAL_API_KEY` (Mistral models)
-- `OPENROUTER_API_KEY` (Multiple models)
-- `XAI_API_KEY` (Grok models)
-
-An API key is required for any provider used across any of the 3 roles defined in the `models` command.
-
-### Model Configuration
-
-```bash
-# Interactive setup (recommended)
-task-master models --setup
-
-# Set specific models
-task-master models --set-main claude-3-5-sonnet-20241022
-task-master models --set-research perplexity-llama-3.1-sonar-large-128k-online
-task-master models --set-fallback gpt-4o-mini
-```
-
-## Task Structure & IDs
-
-### Task ID Format
-
-- Main tasks: `1`, `2`, `3`, etc.
-- Subtasks: `1.1`, `1.2`, `2.1`, etc.
-- Sub-subtasks: `1.1.1`, `1.1.2`, etc.
-
-### Task Status Values
-
-- `pending` - Ready to work on
-- `in-progress` - Currently being worked on
-- `done` - Completed and verified
-- `deferred` - Postponed
-- `cancelled` - No longer needed
-- `blocked` - Waiting on external factors
-
-### Task Fields
-
-```json
-{
-  "id": "1.2",
-  "title": "Implement user authentication",
-  "description": "Set up JWT-based auth system",
-  "status": "pending",
-  "priority": "high",
-  "dependencies": ["1.1"],
-  "details": "Use bcrypt for hashing, JWT for tokens...",
-  "testStrategy": "Unit tests for auth functions, integration tests for login flow",
-  "subtasks": []
-}
-```
-
-## Claude Code Best Practices with Task Master
-
-### Context Management
-
-- Use `/clear` between different tasks to maintain focus
-- This CLAUDE.md file is automatically loaded for context
-- Use `task-master show <id>` to pull specific task context when needed
-
-### Iterative Implementation
-
-1. `task-master show <subtask-id>` - Understand requirements
-2. Explore codebase and plan implementation
-3. `task-master update-subtask --id=<id> --prompt="detailed plan"` - Log plan
-4. `task-master set-status --id=<id> --status=in-progress` - Start work
-5. Implement code following logged plan
-6. `task-master update-subtask --id=<id> --prompt="what worked/didn't work"` - Log progress
-7. `task-master set-status --id=<id> --status=done` - Complete task
-
-### Complex Workflows with Checklists
-
-For large migrations or multi-step processes:
-
-1. Create a markdown PRD file describing the new changes: `touch task-migration-checklist.md` (prds can be .txt or .md)
-2. Use Taskmaster to parse the new prd with `task-master parse-prd --append` (also available in MCP)
-3. Use Taskmaster to expand the newly generated tasks into subtasks. Consdier using `analyze-complexity` with the correct --to and --from IDs (the new ids) to identify the ideal subtask amounts for each task. Then expand them.
-4. Work through items systematically, checking them off as completed
-5. Use `task-master update-subtask` to log progress on each task/subtask and/or updating/researching them before/during implementation if getting stuck
-
-### Git Integration
-
-Task Master works well with `gh` CLI:
-
-```bash
-# Create PR for completed task
-gh pr create --title "Complete task 1.2: User authentication" --body "Implements JWT auth system as specified in task 1.2"
-
-# Reference task in commits
-git commit -m "feat: implement JWT auth (task 1.2)"
-```
-
-### Parallel Development with Git Worktrees
-
-```bash
-# Create worktrees for parallel task development
-git worktree add ../project-auth feature/auth-system
-git worktree add ../project-api feature/api-refactor
-
-# Run Claude Code in each worktree
-cd ../project-auth && claude    # Terminal 1: Auth work
-cd ../project-api && claude     # Terminal 2: API work
-```
-
-## Troubleshooting
-
-### AI Commands Failing
-
-```bash
-# Check API keys are configured
-cat .env                           # For CLI usage
-
-# Verify model configuration
-task-master models
-
-# Test with different model
-task-master models --set-fallback gpt-4o-mini
-```
-
-### MCP Connection Issues
-
-- Check `.mcp.json` configuration
-- Verify Node.js installation
-- Use `--mcp-debug` flag when starting Claude Code
-- Use CLI as fallback if MCP unavailable
-
-### Task File Sync Issues
-
-```bash
-# Regenerate task files from tasks.json
-task-master generate
-
-# Fix dependency issues
-task-master fix-dependencies
-```
-
-DO NOT RE-INITIALIZE. That will not do anything beyond re-adding the same Taskmaster core files.
-
-## Important Notes
-
-### AI-Powered Operations
-
-These commands make AI calls and may take up to a minute:
-
-- `parse_prd` / `task-master parse-prd`
-- `analyze_project_complexity` / `task-master analyze-complexity`
-- `expand_task` / `task-master expand`
-- `expand_all` / `task-master expand --all`
-- `add_task` / `task-master add-task`
-- `update` / `task-master update`
-- `update_task` / `task-master update-task`
-- `update_subtask` / `task-master update-subtask`
-
-### File Management
-
-- Never manually edit `tasks.json` - use commands instead
-- Never manually edit `.taskmaster/config.json` - use `task-master models`
-- Task markdown files in `tasks/` are auto-generated
-- Run `task-master generate` after manual changes to tasks.json
-
-### Claude Code Session Management
-
-- Use `/clear` frequently to maintain focused context
-- Create custom slash commands for repeated Task Master workflows
-- Configure tool allowlist to streamline permissions
-- Use headless mode for automation: `claude -p "task-master next"`
-
-### Multi-Task Updates
-
-- Use `update --from=<id>` to update multiple future tasks
-- Use `update-task --id=<id>` for single task updates
-- Use `update-subtask --id=<id>` for implementation logging
-
-### Research Mode
-
-- Add `--research` flag for research-based AI enhancement
-- Requires a research model API key like Perplexity (`PERPLEXITY_API_KEY`) in environment
-- Provides more informed task creation and updates
-- Recommended for complex technical tasks
-
----
-
-_This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._
+いずれも実在するコマンドです。存在しないコマンド・機能を追加・記載しないでください。

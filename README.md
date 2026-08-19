@@ -10,6 +10,15 @@
 
 心理療法の一種であるナラティブセラピーのアプローチを参考に、ユーザーが自身の体験を肯定的に再定義（リフレーミング）する手助けをします。
 
+## ✨ 主な機能
+
+- **AIによる物語生成**: 入力したエピソードや感情から、ナラティブセラピーの理論に基づいた物語を Google Gemini で生成します。
+- **イラスト自動生成**: 生成された物語の印象的なシーンから、画像生成 AI 向けのプロンプトを作成し、絵本風のイラストを生成します。
+- **読み聞かせ音声（TTS）**: 完成した物語を、話者（voice）を選んで音声化します。生成は Cloudflare Queues による非同期処理で行われます。
+- **物語の管理**: 物語の一覧表示・詳細表示・編集・削除に対応しています。
+- **公開 / 非公開の切り替え**: 作成した物語を公開・非公開に切り替えられます。公開・自分の物語のアクセス制御は Supabase の RLS で行われます。
+- **ユーザー認証**: Supabase Auth によるサインアップ / ログインと、認証が必要なルートの保護（`ProtectedRoute`）に対応しています。
+
 ## 🏛️ アーキテクチャ
 
 本プロジェクトは、フロントエンドとバックエンドを明確に分離した**「静的SPA + サーバーレスAPI」**アーキテクチャを採用しています。インフラはすべて**Cloudflare**のプラットフォーム上で構築されており、高いパフォーマンスとスケーラビリティ、そして優れた開発者体験を実現しています。
@@ -124,6 +133,58 @@ pnpm run dev:all
 | `pnpm dev` | Vite開発サーバーを起動します。 |
 | `pnpm dev:worker` | Wranglerのローカル開発サーバーを起動します。 |
 | `pnpm dev:all` | ViteとWranglerを同時に起動します。 |
-| `pnpm build` | 本番用にプロジェクトをビルドします。 |
+| `pnpm build` | `tsc`による型チェックの後、Vite で本番用にビルドします。 |
+| `pnpm preview` | ビルド済みのフロントエンドをローカルでプレビューします。 |
 | `pnpm lint` | ESLintを実行してコードを静的解析します。 |
-| `pnpm typegen` | Cloudflare Workersの型定義を生成します。 |
+| `pnpm typegen` | `wrangler types` で Cloudflare Workers の型定義（`worker-configuration.d.ts`）を生成します。 |
+
+> 型チェック単体を実行したい場合は、`pnpm build` に含まれる `tsc`（`tsconfig.json` は `noEmit: true`）が該当します。
+
+## 📁 プロジェクト構成
+
+```
+i-happy-stories/
+├── index.html                # Vite のエントリ HTML（SPA のマウントポイント）
+├── vite.config.ts            # Vite 設定（`@` エイリアス、/api プロキシ、manifest 出力）
+├── wrangler.toml             # Cloudflare Workers 設定（main=src/worker.ts, Queues, ルート）
+├── eslint.config.js          # ESLint (flat config)
+├── tailwind.config.js        # Tailwind CSS 設定
+├── src/
+│   ├── main.tsx              # フロントエンドのエントリポイント（React マウント）
+│   ├── App.tsx               # React Router のルート定義
+│   ├── worker.ts             # Cloudflare Workers のエントリ（fetch / queue ハンドラ）
+│   ├── pages/                # 画面（Home, Login, Signup, Stories, StoryDetail など）
+│   ├── components/           # UI コンポーネント（layout, features, common）
+│   ├── routes/               # Hono の API ルート（/api → /v1 → posts, users, auth）
+│   ├── services/             # ドメインロジック（storyService, illustrationService, authService）
+│   ├── schemas/              # Zod による入力バリデーション
+│   ├── middleware/           # Hono ミドルウェア（認証）
+│   ├── stores/               # Zustand ストア（authStore, storyStore）
+│   └── lib/                  # クライアント/ユーティリティ（supabase, apiClient, geminiClient）
+├── types/                    # 追加の型定義
+└── public/                   # 静的アセット（favicon, ogp など）
+```
+
+## 🔌 API エンドポイント
+
+すべてのエンドポイントは `src/worker.ts` により `/api` 配下にマウントされ、バージョンプレフィックス `/v1` を持ちます。
+
+| メソッド & パス | 概要 | 認証 |
+| :--- | :--- | :--- |
+| `POST /api/v1/auth/signup` | サインアップ | 不要 |
+| `POST /api/v1/auth/login` | ログイン | 不要 |
+| `GET /api/v1/me` | ログイン中のユーザー情報を取得 | 必須 |
+| `GET /api/v1/posts` | 自分の物語一覧を取得 | 必須 |
+| `GET /api/v1/posts/latest` | 自分の最新の物語を3件取得 | 必須 |
+| `GET /api/v1/posts/:id` | 特定の物語を取得（公開物語は認証不要） | 任意 |
+| `POST /api/v1/posts` | 物語とイラストを生成・作成 | 必須 |
+| `PUT /api/v1/posts/:id` | 物語を更新 | 必須 |
+| `DELETE /api/v1/posts/:id` | 物語を削除 | 必須 |
+| `PATCH /api/v1/posts/:id/publish` | 物語を公開 | 必須 |
+| `PATCH /api/v1/posts/:id/unpublish` | 物語を非公開 | 必須 |
+| `POST /api/v1/posts/:id/generate-audio` | 読み聞かせ音声の生成をキューに投入 | 必須 |
+| `DELETE /api/v1/posts/audios/:id` | 音声ファイルを削除 | 必須 |
+
+## 📄 ライセンス
+
+`package.json` では `private: true` が指定されており、本リポジトリにライセンスファイルは含まれていません。利用条件についてはリポジトリ管理者にお問い合わせください。
